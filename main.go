@@ -19,9 +19,8 @@ var DSN string
 
 func init() {
 	flag.StringVar(&APIKey, "key", "", "Set the API Key for TODO bot")
+	flag.StringVar(&DSN, "dsn", "", "Set Database Connection String")
 	flag.Parse()
-	fmt.Println("Please input the mysql connection string below")
-	fmt.Scanf("%s", &DSN)
 	db, err := sqlx.Open("mysql", DSN)
 	if err != nil {
 		panic(err)
@@ -67,6 +66,7 @@ func main() {
 
 func List(bot *tg.BotAPI, req *tg.Message) {
 	msg := tg.NewMessage(req.Chat.ID, "")
+	msg.ReplyToMessageID = req.MessageID
 	args := strings.Split(req.CommandArguments(), " ")
 	user := req.From.String()
 	if args[0] == "" {
@@ -111,7 +111,9 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 			}
 			kbd := tg.ReplyKeyboardMarkup{}
 			kbd.Keyboard = btnMap
+			kbd.Selective = true
 			msg.ReplyMarkup = kbd
+			kbd.ResizeKeyboard = true
 		}
 
 	case "all":
