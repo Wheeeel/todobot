@@ -39,9 +39,10 @@ DROP TABLE IF EXISTS `tasks`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tasks` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `task_id` int(10) NOT NULL,
   `content` longtext NOT NULL,
   `enroll_cnt` int(10) NOT NULL DEFAULT '4',
-  `chat_id` int(15) DEFAULT NULL,
+  `chat_id` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
