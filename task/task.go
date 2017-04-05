@@ -64,6 +64,16 @@ func TaskRealID(db *sqlx.DB, taskID int, chatID int64) (tID int, err error) {
 	return
 }
 
+func DelTask(db *sqlx.DB, taskID int) (err error) {
+	sqlStr := "DELETE FROM tasks WHERE id = ?"
+	_, err = db.Queryx(sqlStr, taskID)
+	if err != nil {
+		err = errors.Wrap(err, "del task error")
+		return
+	}
+	return
+}
+
 func AddTask(db *sqlx.DB, task string, enrollCnt int, chatID int64) (err error) {
 	sqlStr := "INSERT INTO tasks (task_id, content, enroll_cnt, chat_id)VALUES(?, ?, ?, ?)"
 	tot, err := TaskCountByChat(db, chatID)

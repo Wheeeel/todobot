@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -58,6 +59,7 @@ func main() {
 		case "ping":
 			Ping(bot, m)
 		case "del":
+			Del(bot, m)
 		case "done":
 			Done(bot, m)
 		}
@@ -147,7 +149,52 @@ func Ping(bot *tg.BotAPI, req *tg.Message) {
 	return
 }
 
-func Del(bot *tg.BotAPI, req *tg.Message) (msg tg.MessageConfig, err error) {
+func Del(bot *tg.BotAPI, req *tg.Message) {
+	log.Infof("cmd = del")
+	msg := tg.NewMessage(req.Chat.ID, "")
+	msg.ReplyToMessageID = req.MessageID
+	chatID := req.Chat.ID
+	if len(req.CommandArguments()) == 0 {
+		msg.Text = "Usage: /del <taskID>,<taskID>,<taskID>"
+		bot.Send(msg)
+		return
+	}
+	args := strings.Split(strings.Trim(req.CommandArguments(), " "), ",")
+	delList := make([]int, 0)
+	for _, arg := range args {
+		taskID, err := strconv.ParseInt(arg, 10, 64)
+		if err != nil {
+			log.Error(errors.Wrap(err, "cannot parseint"))
+			msg.Text = "诶OAO出错了呢，请检查参数是否正确哦"
+			bot.Send(msg)
+			return
+		}
+		tid, err := task.TaskRealID(task.DB, int(taskID), chatID)
+		if err != nil {
+			log.Error(errors.Wrap(err, "get realID error"))
+			msg.Text = "诶OAO出错了呢，请检查任务是否存在哦"
+			bot.Send(msg)
+			return
+		}
+		delList = append(delList, tid)
+	}
+	tlen := len(delList)
+	count := 0
+	for _, id := range delList {
+		err := task.DelTask(task.DB, id)
+		if err == nil {
+			err = errors.Wrap(err, "Error when removing tasks by realID")
+			log.Error(err)
+			count++
+		}
+	}
+	if count != tlen {
+		msg.Text = fmt.Sprintf("OwO有的任务删除失败了喵～，这次清理掉了 %d 个任务中的 %d 个哦", tlen, count)
+		bot.Send(msg)
+		return
+	}
+	msg.Text = fmt.Sprintf("成功消灭掉了所有选择的 %d 个任务喵~", count)
+	bot.Send(msg)
 	return
 }
 
@@ -202,6 +249,12 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 		bot.Send(msg)
 		return
 	}
+	// Remove the Keyboard
+
+	rmkbd := tg.ReplyKeyboardRemove{}
+	rmkbd.RemoveKeyboard = true
+	msg.ReplyMarkup = rmkbd
+
 	// Change ID to Task Real ID
 	taskID, err := task.TaskRealID(task.DB, taskID, msg.ChatID)
 	if err != nil {
@@ -243,7 +296,8 @@ func ToDo(bot *tg.BotAPI, req *tg.Message) {
 	msg := tg.NewMessage(req.Chat.ID, "")
 	args := strings.Split(req.CommandArguments(), ",")
 	if args[0] == "" {
-		msg.Text = "To add TODO Items, use /todo item1,item2,...,"
+		msg.Text = "usage: `/todo taskObj1,taskObj2,taskObj3`\ntaskObj: `<description>##<enrollCnt>`\ne.g: `/todo 吃包##2`"
+		msg.ParseMode = tg.ModeMarkdown
 		bot.Send(msg)
 		return
 	}
@@ -252,6 +306,7 @@ func ToDo(bot *tg.BotAPI, req *tg.Message) {
 	`
 	cnt := 0
 	for _, arg := range args {
+		arg = strings.TrimLeft(arg, " ")
 		tmp := strings.Split(arg, "##")
 		var enrollCnt int
 		taskStr := tmp[0]
@@ -259,7 +314,7 @@ func ToDo(bot *tg.BotAPI, req *tg.Message) {
 			fmt.Sscanf(tmp[1], "%d", &enrollCnt)
 		}
 		if len(tmp) == 1 {
-			enrollCnt = 4
+			enrollCnt = 1
 		}
 		err := task.AddTask(task.DB, taskStr, enrollCnt, req.Chat.ID)
 		if err != nil {
