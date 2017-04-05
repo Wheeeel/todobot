@@ -62,6 +62,13 @@ func main() {
 			Del(bot, m)
 		case "done":
 			Done(bot, m)
+		default:
+			if strings.Contains(m.Command(), "donex") {
+				Done(bot, m)
+			}
+			if strings.Contains(m.Command(), "del") {
+				Del(bot, m)
+			}
 		}
 	}
 }
@@ -81,7 +88,7 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 		bot.Send(msg)
 		return
 	}
-	replyTpl := " *List Tasks* \n```\n"
+	replyTpl := " *List Tasks* \n"
 	switch args[0] {
 	case "unfin":
 		for _, item := range tl {
@@ -99,10 +106,10 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 					return
 				}
 				if !done {
-					replyTpl = replyTpl + fmt.Sprintf("[%d] %s %d/%d\n", item.TaskID, item.Content, fcnt, item.EnrollCnt)
+					replyTpl = replyTpl + fmt.Sprintf("`[%d] %s %d/%d` /donex%d \n", item.TaskID, item.Content, fcnt, item.EnrollCnt, item.TaskID)
 				}
 				if done {
-					replyTpl = replyTpl + fmt.Sprintf("[%d] %s %d/%d √\n", item.TaskID, item.Content, fcnt, item.EnrollCnt)
+					replyTpl = replyTpl + fmt.Sprintf("`[%d] %s %d/%d` √\n", item.TaskID, item.Content, fcnt, item.EnrollCnt)
 				}
 			}
 		}
@@ -135,7 +142,7 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 		return
 
 	}
-	replyTpl = replyTpl + "\n```"
+	//replyTpl = replyTpl + "\n```"
 	msg.ParseMode = tg.ModeMarkdown
 	msg.Text = replyTpl
 	bot.Send(msg)
@@ -204,7 +211,13 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 	msg.ReplyToMessageID = req.MessageID
 	user := req.From.String()
 	var taskID int
-	fmt.Sscanf(req.CommandArguments(), "%d", &taskID)
+	// Here we fetch the argument
+	if req.Command() != "done" {
+		fmt.Sscanf(strings.Split(req.Command(), "x")[1], "%d", &taskID)
+	} else {
+		fmt.Sscanf(req.CommandArguments(), "%d", &taskID)
+	}
+
 	log.Infof("TaskID = %d", taskID)
 	if taskID == 0 {
 		btnMap := make([][]tg.KeyboardButton, 0)
