@@ -23,11 +23,11 @@ DROP TABLE IF EXISTS `groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `groups` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `supergroup` varchar(45) NOT NULL,
   `disabled` varchar(45) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime NOT NULL, -- DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL, --  DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -45,10 +45,10 @@ CREATE TABLE `projects` (
   `description` longtext NOT NULL COMMENT 'Description of the project',
   `repo` varchar(255) NOT NULL COMMENT 'repo / URL of the project',
   `created_by` int(11) NOT NULL COMMENT 'related to who create the project',
-  `group_id` int(11) NOT NULL,
+  `group_id` bigint(11) NOT NULL,
   `group_project` tinyint(4) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime NOT NULL, -- DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL, --  DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -61,10 +61,10 @@ DROP TABLE IF EXISTS `sessions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sessions` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
-  `group_id` int(11) NOT NULL,
-  `state` varchar(255) NOT NULL,
+  `group_id` bigint(11) NOT NULL,
+  `session` longtext NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -79,12 +79,12 @@ DROP TABLE IF EXISTS `task_assign`;
 CREATE TABLE `task_assign` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `task_id` int(11) NOT NULL,
-  `group_id` int(11) NOT NULL,
+  `group_id` bigint(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `project_id` int(11) NOT NULL,
   `done` tinyint(4) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime NOT NULL, -- DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL, -- DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -103,8 +103,9 @@ CREATE TABLE `tasks` (
   `ddl` datetime NOT NULL COMMENT 'Deadline of the task, only creator / root can modify this\n',
   `reminder` tinyint(4) NOT NULL COMMENT 'Switch to control whether to remind person',
   `project_id` int(11) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+  `group_id` bigint(11) NOT NULL,
+  `created_at` datetime NOT NULL, -- DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL, -- DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
   `enroll_cnt` int(11) NOT NULL,
   `done_cnt` int(11) NOT NULL,
   PRIMARY KEY (`id`)
@@ -119,13 +120,12 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
-  `id` int(11) NOT NULL COMMENT 'Real ID of the user\n',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Real ID of the user\n',
   `root` tinyint(4) NOT NULL,
   `disabled` tinyint(4) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`)
+  `created_at` datetime NOT NULL, -- DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL, -- DEFAULT '0000-00-00 00:00:00' ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -138,4 +138,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-04-06 12:06:20
+-- Dump completed on 2017-04-07  1:39:51
