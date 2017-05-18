@@ -35,7 +35,7 @@ func TaskCountByChat(db *sqlx.DB, chatID int64) (cnt int, err error) {
 }
 
 func TasksByChat(db *sqlx.DB, chatID int64) (tl []Task, err error) {
-	sqlStr := "SELECT id, task_id, content, enroll_cnt  FROM tasks WHERE chat_id = ? ORDER BY task_id ASC LIMIT 50"
+	sqlStr := "SELECT id, task_id, content, enroll_cnt  FROM tasks WHERE chat_id = ? ORDER BY task_id ASC"
 	rows, err := db.Queryx(sqlStr, chatID)
 	if err != nil {
 		err = errors.Wrap(err, "tasks by chat error")
