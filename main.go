@@ -8,6 +8,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/Wheeeel/todobot/hitoko"
 	"github.com/Wheeeel/todobot/task"
 	_ "github.com/go-sql-driver/mysql"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -151,7 +152,15 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 }
 
 func Ping(bot *tg.BotAPI, req *tg.Message) {
-	msg := tg.NewMessage(req.Chat.ID, fmt.Sprintf("Hello %s, start today's coding!", req.From.String()))
+	hitokoResp, err := hitoko.Fortune(hitoko.TYPE_ANIME)
+	hitokoStr := ""
+	if err != nil {
+		log.Error(err)
+	} else {
+		hitokoStr = fmt.Sprintf("%s\n\n--%s\n", hitokoResp.Hitokoto, hitokoResp.From)
+	}
+	txtMsg := fmt.Sprintf("Hello %s, Have a nice day!\n%s", req.From.String(), hitokoStr)
+	msg := tg.NewMessage(req.Chat.ID, txtMsg)
 	bot.Send(msg)
 	return
 }
