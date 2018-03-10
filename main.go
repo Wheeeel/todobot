@@ -5,6 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/Wheeeel/todobot/command"
 	"github.com/Wheeeel/todobot/task"
@@ -15,10 +18,12 @@ import (
 
 var APIKey string
 var DSN string
+var PProfAddr string
 
 func init() {
 	flag.StringVar(&APIKey, "key", "", "Set the API Key for TODO bot")
 	flag.StringVar(&DSN, "dsn", "", "Set Database Connection String")
+	flag.StringVar(&PProfAddr, "pprof_addr", "127.0.0.1:9218", "Set the port and address pprof server use")
 	flag.Parse()
 	db, err := sqlx.Open("mysql", DSN)
 	if err != nil {
@@ -33,6 +38,7 @@ func init() {
 
 func main() {
 	log.Infof("TaskBot Started at %s", time.Now())
+	log.Infof("PProf Started at %s", PProfAddr)
 	bot, err := tg.NewBotAPI(APIKey)
 	if err != nil {
 		log.Fatal(err)
@@ -47,6 +53,10 @@ func main() {
 	command.Register(command.List, "list")
 	command.Register(command.Done, "done")
 	updates, err := bot.GetUpdatesChan(u)
+	go func() {
+		log.Println(http.ListenAndServe(PProfAddr, nil))
+	}()
+
 	for update := range updates {
 		if update.Message == nil {
 			continue

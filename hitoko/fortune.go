@@ -36,6 +36,7 @@ func Fortune(category string) (r HitokoResponse, err error) {
 	}
 	req_uri := fmt.Sprintf("%sc=%s", HITOKO_URL, category)
 	resp, er := http.Get(req_uri)
+	defer resp.Body.Close()
 	if er != nil {
 		err = errors.Wrap(er, "Fortune error")
 		return
