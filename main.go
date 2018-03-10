@@ -59,6 +59,8 @@ func main() {
 			List(bot, m)
 		case "ping":
 			Ping(bot, m)
+		case "rank":
+			Rank(bot, m)
 		case "del":
 			Del(bot, m)
 		case "done":
@@ -72,6 +74,38 @@ func main() {
 			}
 		}
 	}
+}
+
+func Rank(bot *tg.BotAPI, req *tg.Message) {
+	msg := tg.NewMessage(req.Chat.ID, "")
+	msg.ReplyToMessageID = req.MessageID
+	args := strings.Split(req.CommandArguments(), " ")
+	count := 0
+	if args[0] == "" {
+		count = 10
+	}
+	count, err := strconv.Atoi(args[0])
+	if err != nil {
+		count = 10
+	}
+	if count > 1000 {
+		count = 1000
+	}
+	rankList, err := task.Ranking(task.DB, count)
+	if err != nil {
+		msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
+		log.Error(err)
+		bot.Send(msg)
+		return
+	}
+	txtMsg := fmt.Sprintf(" *前%d用户榜~~~* \n", count)
+	for _, robj := range rankList {
+		txtMsg = txtMsg + fmt.Sprintf("`[完成%d个任务]     %s\n`", robj.Count, robj.DoneBy)
+	}
+	txtMsg += fmt.Sprintf("*请珍惜每一天的时间哦～现在努力以后才有更多时间摸鱼w*")
+	msg.ParseMode = tg.ModeMarkdown
+	msg.Text = txtMsg
+	bot.Send(msg)
 }
 
 func List(bot *tg.BotAPI, req *tg.Message) {
