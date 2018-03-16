@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Wheeeel/todobot/task"
@@ -14,6 +15,8 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 	msg := tg.NewMessage(req.Chat.ID, "")
 	msg.ReplyToMessageID = req.MessageID
 	user := req.From.String()
+	userID := req.From.ID
+	chatID := req.Chat.ID
 	var taskID int
 	// Here we fetch the argument
 	if req.Command() != "done" {
@@ -104,7 +107,25 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 		bot.Send(msg)
 		return
 	}
+	// done the task by get the task
+	atil, err := task.SelectATIByUserIDAndChatIDAndState(task.DB, userID, chatID, task.ATI_STATE_WORKING)
+	if err != nil {
+		msg.Text = fmt.Sprintf("Oops! %s", err)
+		bot.Send(msg)
+		return
+	}
+	log.Infof("%+v", atil[0])
 	msg.Text = fmt.Sprintf("%s done task *%s*", user, t.Content)
+	if len(atil) > 0 {
+		// finish the task here
+		err = task.FinishATI(task.DB, atil[0].InstanceUUID)
+		if err != nil {
+			msg.Text = fmt.Sprintf("Oops! %s", err)
+			bot.Send(msg)
+			return
+		}
+		msg.Text = msg.Text + "\n" + fmt.Sprintf("恭喜完成任务啦～ 本次任务用时 %s ", time.Since(atil[0].StartAt.Time))
+	}
 	bot.Send(msg)
 	return
 }

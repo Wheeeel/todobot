@@ -52,30 +52,34 @@ func main() {
 	command.Register(command.Ping, "ping")
 	command.Register(command.List, "list")
 	command.Register(command.Done, "done")
+	command.Register(command.Workon, "workon")
+	command.Register(command.Moyu, "moyu_plugin")
 	updates, err := bot.GetUpdatesChan(u)
 	go func() {
 		log.Println(http.ListenAndServe(PProfAddr, nil))
 	}()
 
 	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
 		m := update.Message
-		if m.IsCommand() != true {
-			continue
+		cq := update.CallbackQuery
+		if m != nil {
+			log.Infof("Message Recieved: %s", m.Text)
+			if fn, err := command.Lookup(m.Command()); err == nil && fn != nil {
+				go fn(bot, m)
+				continue
+			}
+			if strings.Contains(m.Command(), "donex") {
+				go command.Done(bot, m)
+				continue
+			}
+			if strings.Contains(m.Command(), "del") {
+				go command.Del(bot, m)
+				continue
+			}
+			command.Moyu(bot, m)
 		}
-		log.Infof("Chat ID: %d", m.Chat.ID)
-		if fn, err := command.Lookup(m.Command()); err == nil && fn != nil {
-			go fn(bot, m)
-			continue
-		}
-		if strings.Contains(m.Command(), "donex") {
-			go command.Done(bot, m)
-			continue
-		}
-		if strings.Contains(m.Command(), "del") {
-			go command.Del(bot, m)
+		if cq != nil {
+
 		}
 	}
 }

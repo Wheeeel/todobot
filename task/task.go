@@ -1,9 +1,14 @@
 package task
 
 import (
+	"fmt"
+	"sync"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
+
+var mu = sync.RWMutex{}
 
 var DB *sqlx.DB
 
@@ -14,9 +19,13 @@ type Task struct {
 	EnrollCnt int    `json:"enroll_cnt" db:"enroll_cnt"`
 }
 
+func (t Task) String() string {
+	return fmt.Sprintf("[%d] %s", t.TaskID, t.Content)
+}
+
 func TaskByID(db *sqlx.DB, taskID int) (t Task, err error) {
-	sqlStr := "SELECT id, content, enroll_cnt  FROM tasks WHERE id = ?"
-	err = db.QueryRowx(sqlStr, taskID).Scan(&t.ID, &t.Content, &t.EnrollCnt)
+	sqlStr := "SELECT id, task_id, content, enroll_cnt  FROM tasks WHERE id = ?"
+	err = db.QueryRowx(sqlStr, taskID).Scan(&t.ID, &t.TaskID, &t.Content, &t.EnrollCnt)
 	if err != nil {
 		err = errors.Wrap(err, "tasks by ID error")
 		return
@@ -24,9 +33,21 @@ func TaskByID(db *sqlx.DB, taskID int) (t Task, err error) {
 	return
 }
 
+func TaskExist(db *sqlx.DB, taskID int) (ok bool, err error) {
+	sqlStr := "SELECT COUNT(*) > 0 FROM tasks WHERE id = ?"
+	err = db.QueryRowx(sqlStr, taskID).Scan(&ok)
+	if err != nil {
+		err = errors.Wrap(err, "TaskExist")
+		return
+	}
+	return
+}
+
 func TaskCountByChat(db *sqlx.DB, chatID int64) (cnt int, err error) {
 	sqlStr := "SELECT COUNT(*) FROM tasks WHERE chat_id = ?"
+	mu.RLock()
 	err = db.QueryRowx(sqlStr, chatID).Scan(&cnt)
+	mu.RUnlock()
 	if err != nil {
 		err = errors.Wrap(err, "task count by chat error")
 		return
@@ -82,7 +103,9 @@ func AddTask(db *sqlx.DB, task string, enrollCnt int, chatID int64) (err error) 
 		return
 	}
 	tID := tot + 1
+	mu.Lock()
 	_, err = db.Queryx(sqlStr, tID, task, enrollCnt, chatID)
+	mu.Unlock()
 	if err != nil {
 		err = errors.Wrap(err, "add task error")
 		return

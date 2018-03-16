@@ -8,6 +8,7 @@ import (
 type CommandHandler func(*tg.BotAPI, *tg.Message)
 
 var commandRegistry map[string]CommandHandler
+var commandQueue []CommandHandler
 
 func init() {
 	commandRegistry = make(map[string]CommandHandler)
