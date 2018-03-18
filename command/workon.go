@@ -40,7 +40,7 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 	}
 
 	// sanity check
-	atil, err := task.SelectATIByUserIDAndChatIDAndStateForUpdate(task.DB, userID, chatID, task.ATI_STATE_WORKING)
+	atil, err := task.SelectATIByUserIDAndStateForUpdate(task.DB, userID, task.ATI_STATE_WORKING)
 	if err != nil {
 		err = errors.Wrap(err, "WorkON")
 		log.Error(err)
@@ -83,7 +83,7 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 				goto l1
 			}
 		}
-		txtMsg := fmt.Sprintf("唔，乃正在本群内进行着一项工作呢，本bot还不支持心分二用的说QwQ\n正在进行的任务: %s", ts)
+		txtMsg := fmt.Sprintf("唔，乃正进行着一项工作呢，本bot还不支持心分二用的说QwQ\n正在进行的任务: %s", ts)
 		m := tg.NewMessage(chatID, txtMsg)
 		bot.Send(m)
 		return

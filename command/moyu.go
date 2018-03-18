@@ -18,13 +18,14 @@ var friendlyMessage = []string{
 	"工作的时候不要摸鱼啦，完成任务之后就可以开心玩耍了呢",
 	"OAO，请不要摸鱼哦",
 	"OwO, 辛苦啦，再坚持一下就能完成任务了呢",
+	"还不去工作！今天的bug修了么？作业写完了么？自己要做的事情做完了么？快去工作",
 }
 
 func Moyu(bot *tg.BotAPI, req *tg.Message) {
 	userID := req.From.ID
 	chatID := req.Chat.ID
 
-	atil, err := task.SelectATIByUserIDAndChatIDAndState(task.DB, userID, chatID, task.ATI_STATE_WORKING)
+	atil, err := task.SelectATIByUserIDAndState(task.DB, userID, task.ATI_STATE_WORKING)
 	if err != nil {
 		err = errors.Wrap(err, "Moyu")
 		log.Errorf("%s [skip the command]", err)
@@ -54,7 +55,10 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) {
 	}
 	rand.Seed(time.Now().UnixNano())
 	fm := friendlyMessage[rand.Intn(len(friendlyMessage))]
-	txtMsg := fmt.Sprintf("%s\n正在完成的任务: %s", fm, ts)
+	txtMsg := fmt.Sprintf("%s\n正在完成的任务ID: [%d]", fm, ts.TaskID)
+	if ati.NotifyID == chatID {
+		txtMsg = fmt.Sprintf("%s\n正在完成的任务: %s", fm, ts)
+	}
 	m := tg.NewMessage(chatID, txtMsg)
 	m.ReplyToMessageID = req.MessageID
 	bot.Send(m)

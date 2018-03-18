@@ -95,14 +95,14 @@ func DelTask(db *sqlx.DB, taskID int) (err error) {
 	return
 }
 
-func AddTask(db *sqlx.DB, task string, enrollCnt int, chatID int64) (err error) {
+func AddTask(db *sqlx.DB, task string, enrollCnt int, chatID int64) (tID int, err error) {
 	sqlStr := "INSERT INTO tasks (task_id, content, enroll_cnt, chat_id)VALUES(?, ?, ?, ?)"
 	tot, err := TaskCountByChat(db, chatID)
 	if err != nil {
 		err = errors.Wrap(err, "add task error")
 		return
 	}
-	tID := tot + 1
+	tID = tot + 1
 	mu.Lock()
 	_, err = db.Queryx(sqlStr, tID, task, enrollCnt, chatID)
 	mu.Unlock()

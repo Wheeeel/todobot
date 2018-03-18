@@ -114,9 +114,9 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 		bot.Send(msg)
 		return
 	}
-	log.Infof("%+v", atil[0])
 	msg.Text = fmt.Sprintf("%s done task *%s*", user, t.Content)
 	if len(atil) > 0 {
+		log.Infof("%+v", atil[0])
 		// finish the task here
 		err = task.FinishATI(task.DB, atil[0].InstanceUUID)
 		if err != nil {

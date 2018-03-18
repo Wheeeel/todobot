@@ -34,6 +34,17 @@ func SelectATIByUUID(db *sqlx.DB, UUID string) (atil []ActiveTaskInstance, err e
 }
 
 func SelectATIByUserIDAndState(db *sqlx.DB, uid int, state int) (atil []ActiveTaskInstance, err error) {
+	sqlx := "SELECT * FROM active_task_instance WHERE user_id = ? AND instance_state = ?"
+	rows, er := db.Queryx(sqlx, uid, state)
+	if er != nil {
+		err = errors.Wrap(er, "SelectATIByUserIDAndStateForUpdate")
+		return
+	}
+	for rows.Next() {
+		ati := ActiveTaskInstance{}
+		rows.StructScan(&ati)
+		atil = append(atil, ati)
+	}
 	return
 }
 
@@ -81,16 +92,20 @@ func FinishATI(db *sqlx.DB, uuid string) (err error) {
 	return
 }
 
+func SelectATIByUserIDAndStateForUpdate(db *sqlx.DB, uid int, state int) (atil []ActiveTaskInstance, err error) {
+	return SelectATIByUserIDAndState(db, uid, state)
+}
+
 func SelectATIByUserIDAndChatIDAndStateForUpdate(db *sqlx.DB, uid int, cid int64, state int) (atil []ActiveTaskInstance, err error) {
 	return SelectATIByUserIDAndChatIDAndState(db, uid, cid, state)
 }
 
 func InsertATI(db *sqlx.DB, ati ActiveTaskInstance) (err error) {
 	sqlx := `INSERT INTO active_task_instance (instance_uuid, task_id,
-				instance_state, reminder_state, 
-				reminder_expression, user_id, 
-				notify_to_id, start_at, end_at, wander_protect)
-				VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	instance_state, reminder_state, 
+	reminder_expression, user_id, 
+	notify_to_id, start_at, end_at, wander_protect)
+	VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	_, err = db.Exec(sqlx, ati.InstanceUUID,
 		ati.TaskID, ati.InstanceState,
 		ati.ReminderState, ati.ReminderExpression, ati.UserID, ati.NotifyID,

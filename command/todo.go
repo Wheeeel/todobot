@@ -34,7 +34,7 @@ func TODO(bot *tg.BotAPI, req *tg.Message) {
 		if len(tmp) == 1 {
 			enrollCnt = 1
 		}
-		err := task.AddTask(task.DB, taskStr, enrollCnt, req.Chat.ID)
+		tid, err := task.AddTask(task.DB, taskStr, enrollCnt, req.Chat.ID)
 		if err != nil {
 			err = errors.Wrap(err, "cmd todo error")
 			log.Error(err)
@@ -42,7 +42,7 @@ func TODO(bot *tg.BotAPI, req *tg.Message) {
 			break
 		}
 		cnt++
-		textTpl = textTpl + "*TODO* _" + taskStr + "_\n"
+		textTpl = textTpl + fmt.Sprintf("*TODO [%d]* _", tid) + taskStr + "_\n"
 	}
 	textTpl = fmt.Sprintf(textTpl, cnt)
 	msg.ParseMode = tg.ModeMarkdown
