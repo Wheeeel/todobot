@@ -45,6 +45,7 @@ func TODO(bot *tg.BotAPI, req *tg.Message) {
 		textTpl = textTpl + fmt.Sprintf("*TODO [%d]* _", tid) + taskStr + "_\n"
 	}
 	textTpl = fmt.Sprintf(textTpl, cnt)
+	textTpl += "Use /workon to focus on one of your job!"
 	msg.ParseMode = tg.ModeMarkdown
 	msg.Text = textTpl
 	bot.Send(msg)
