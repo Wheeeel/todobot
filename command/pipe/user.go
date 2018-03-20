@@ -25,11 +25,10 @@ func User(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 func getUser(u *tg.User) (uobj task.User, err error) {
 	// if not command, we do not track user
 	dispName := u.LastName
-	log.Infof("Username: %s, DispName: %s", u.UserName, dispName)
-
 	if u.FirstName != "" {
 		dispName = u.FirstName + " " + dispName
 	}
+	log.Infof("Username: %s, DispName: %s", u.UserName, dispName)
 
 	uobj, err = task.SelectUser(task.DB, u.ID)
 	if err != nil {

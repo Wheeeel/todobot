@@ -17,21 +17,24 @@ type User struct {
 }
 
 func SelectUser(db *sqlx.DB, id int) (u User, err error) {
-	sqlStr := "SELECT * FROM users WHERE id = ?"
-	rows, er := db.Queryx(sqlStr, id)
-	if er != nil {
-		err = errors.Wrap(er, "SelectUser")
+	sqlStr := "SELECT COUNT(*)>0 FROM users WHERE id = ?"
+	ok := false
+	err = db.QueryRowx(sqlStr, id).Scan(&ok)
+	if err != nil {
+		err = errors.Wrap(err, "SelectUser")
 		return
 	}
-	if !rows.Next() {
+	if !ok {
 		u.Exist = false
 		return
 	}
+	sqlStr = "SELECT * FROM users WHERE id = ?"
 	err = db.QueryRowx(sqlStr, id).StructScan(&u)
 	if err != nil {
 		err = errors.Wrap(err, "SelectUser")
 		return
 	}
+	u.Exist = true
 	return
 }
 
