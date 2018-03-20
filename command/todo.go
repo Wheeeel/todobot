@@ -23,6 +23,10 @@ func TODO(bot *tg.BotAPI, req *tg.Message) {
 	*%d TODO Items Added*
 	`
 	cnt := 0
+
+	// inline button for working on it
+	btns := tg.NewInlineKeyboardMarkup()
+
 	for _, arg := range args {
 		arg = strings.TrimLeft(arg, " ")
 		tmp := strings.Split(arg, "##")
@@ -41,6 +45,9 @@ func TODO(bot *tg.BotAPI, req *tg.Message) {
 			textTpl = textTpl + "[ERROR] Server error, not all items added\n"
 			break
 		}
+		btn := tg.NewInlineKeyboardButtonData(fmt.Sprintf("Do task %d NOW!", tid), fmt.Sprintf("workon\x01%d,%d\x01", req.Chat.ID, tid))
+		btnrow := []tg.InlineKeyboardButton{btn}
+		btns.InlineKeyboard = append(btns.InlineKeyboard, btnrow)
 		cnt++
 		textTpl = textTpl + fmt.Sprintf("*TODO [%d]* _", tid) + taskStr + "_\n"
 	}
@@ -48,6 +55,10 @@ func TODO(bot *tg.BotAPI, req *tg.Message) {
 	textTpl += "Use /workon to focus on one of your job!"
 	msg.ParseMode = tg.ModeMarkdown
 	msg.Text = textTpl
-	bot.Send(msg)
+	msg.ReplyMarkup = btns
+	_, err := bot.Send(msg)
+	if err != nil {
+		log.Error(err)
+	}
 	return
 }

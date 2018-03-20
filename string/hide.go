@@ -13,3 +13,10 @@ func Hide(input string, mask string) string {
 	}
 	return string(rinput)
 }
+
+func Atmost4Char(input []rune) string {
+	if len(input) > 4 {
+		return string(input[0:4])
+	}
+	return string("*****")
+}

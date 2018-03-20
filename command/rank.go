@@ -1,16 +1,18 @@
 package command
 
 import (
-	"bytes"
 	"fmt"
+	"io/ioutil"
+	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	tdstr "github.com/Wheeeel/todobot/string"
 	"github.com/Wheeeel/todobot/task"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
-	chart "github.com/wcharczuk/go-chart"
+	"github.com/pkg/errors"
 )
 
 func Rank(bot *tg.BotAPI, req *tg.Message) {
@@ -19,6 +21,14 @@ func Rank(bot *tg.BotAPI, req *tg.Message) {
 	args := strings.Split(req.CommandArguments(), " ")
 	count := 0
 	showPic := false
+	rankJSON := "rank = {datasets:[{data: [%s], backgroundColor: [%s]}], labels:[%s]};"
+	chartJSData := make([]string, 0)
+	chartJSLabel := make([]string, 0)
+	chartJSColor := make([]string, 0)
+	btn := tg.NewInlineKeyboardButtonURL("点击查看排行榜", "https://todo.void-shana.moe/rank.html")
+	btnrow := []tg.InlineKeyboardButton{btn}
+	btns := tg.NewInlineKeyboardMarkup(btnrow)
+
 	if args[0] == "" {
 		count = 10
 	}
@@ -42,51 +52,26 @@ func Rank(bot *tg.BotAPI, req *tg.Message) {
 	if !showPic {
 		txtMsg := fmt.Sprintf(" *前%d用户榜~~~* \n", count)
 		for _, robj := range rankList {
-			txtMsg = txtMsg + fmt.Sprintf("`[完成%d个任务]     %s\n`", robj.Count, tdstr.Hide(robj.DoneBy, "*"))
+			chartJSData = append(chartJSData, fmt.Sprintf("%d", robj.Count))
+			chartJSLabel = append(chartJSLabel, fmt.Sprintf("'%s'", tdstr.Hide(robj.DoneBy, "*")))
+			rand.Seed(time.Now().UnixNano())
+			chartJSColor = append(chartJSColor,
+				fmt.Sprintf("'rgba(%d, %d, %d, 0.6)'", rand.Intn(255), rand.Intn(255), rand.Intn(255)))
+			//txtMsg = txtMsg + fmt.Sprintf("`[完成%d个任务]     %s\n`", robj.Count, tdstr.Hide(robj.DoneBy, "*"))
 		}
 		txtMsg += fmt.Sprintf("*请珍惜每一天的时间哦～现在努力以后才有更多时间摸鱼w*\n")
-		txtMsg += fmt.Sprintf("*(为保护用户隐私已经对用户名进行脱敏处理)*")
+		txtMsg += fmt.Sprintf("*(为保护用户隐私已经对用户名进行脱敏处理)*\n")
 		msg.ParseMode = tg.ModeMarkdown
 		msg.Text = txtMsg
+		msg.ReplyMarkup = btns
+		// Let's write the JSON and dump it
+		rankJSON = fmt.Sprintf(rankJSON, strings.Join(chartJSData, ","), strings.Join(chartJSColor, ","), strings.Join(chartJSLabel, ","))
+		err = ioutil.WriteFile("/var/data/todo.void-shana.moe/data.js", []byte(rankJSON), 0666)
+		if err != nil {
+			err = errors.Wrap(err, "Rank")
+			log.Error(err)
+		}
 		bot.Send(msg)
 		return
-	}
-	log.Info("Start to plot the graph")
-	// we show the graph
-	c := chart.BarChart{}
-	c.Title = fmt.Sprintf("前%d用户榜~~~", count)
-	c.TitleStyle = chart.StyleShow()
-	c.XAxis = chart.Style{Show: true}
-	c.YAxis = chart.YAxis{Style: chart.Style{Show: true}}
-	c.Height = 512
-	c.Width = 2048
-	c.BarWidth = (c.Width - 100) / count
-	if c.BarWidth > 50 {
-		c.BarWidth = 50
-	}
-	c.Bars = make([]chart.Value, 0)
-	for _, robj := range rankList {
-		v := chart.Value{}
-		v.Label = tdstr.Hide(robj.DoneBy, "*")
-		v.Value = float64(robj.Count)
-		c.Bars = append(c.Bars, v)
-	}
-	buf := bytes.NewBuffer([]byte{})
-	if err = c.Render(chart.PNG, buf); err != nil {
-		msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
-		log.Error(err)
-		bot.Send(msg)
-		return
-	}
-	log.Infof("graphobj: %+v", c)
-	reader := tg.FileReader{Name: "chart.png", Reader: buf, Size: -1}
-	photo := tg.NewPhotoUpload(req.Chat.ID, reader)
-	photo.ReplyToMessageID = req.MessageID
-	photo.Caption = "*请珍惜每一天的时间哦～现在努力以后才有更多时间摸鱼w*\n"
-	photo.Caption += fmt.Sprintf("*(为保护用户隐私已经对用户名进行脱敏处理)*")
-	log.Infof("photo: %+v", photo)
-	_, err = bot.Send(photo)
-	if err != nil {
-		log.Errorf("Send picture error: %s", err)
 	}
 }
