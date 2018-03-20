@@ -11,14 +11,46 @@ import (
 // TODO: Change Handlers into interface
 type CommandHandler func(*tg.BotAPI, *tg.Message)
 type CQCommandHandler func(*tg.BotAPI, *tg.CallbackQuery)
+type Pipe func(*tg.BotAPI, *tg.Message) bool // if retval = false, stop the pipeline and stop the following process
+type Pipeline []Pipe
 
 var commandRegistry map[string]CommandHandler
 var cqcommandRegistry map[string]CQCommandHandler
-var commandQueue []CommandHandler
+var pipelineRegistry map[string]Pipeline
 
 func init() {
 	commandRegistry = make(map[string]CommandHandler)
 	cqcommandRegistry = make(map[string]CQCommandHandler)
+	pipelineRegistry = make(map[string]Pipeline)
+}
+
+func PipelinePush(p Pipe, name string) (err error) {
+	if _, ok := pipelineRegistry[name]; !ok {
+		pipelineRegistry[name] = Pipeline{p}
+		return
+	}
+	pl := pipelineRegistry[name]
+	pl = append(pl, p)
+	pipelineRegistry[name] = pl
+	return
+}
+
+// Note: here we can safely access pipeline concurrently
+// TODO: concurrent access to pipeline
+func ExecPipeline(bot *tg.BotAPI, m *tg.Message, name string) (ret bool) {
+	ret = true
+	if _, ok := pipelineRegistry[name]; !ok {
+		return
+	}
+	pl := pipelineRegistry[name]
+	log.Debugf("pipeline: %v", pl)
+	for _, p := range pl {
+		ret = p(bot, m)
+		if !ret {
+			return
+		}
+	}
+	return
 }
 
 func CQRegister(handle CQCommandHandler, command string) (err error) {

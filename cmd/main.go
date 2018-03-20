@@ -11,6 +11,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/Wheeeel/todobot/command"
 	CQ "github.com/Wheeeel/todobot/command/cq"
+	"github.com/Wheeeel/todobot/command/pipe"
 	tdstr "github.com/Wheeeel/todobot/string"
 	"github.com/Wheeeel/todobot/task"
 	_ "github.com/go-sql-driver/mysql"
@@ -27,6 +28,7 @@ func init() {
 	flag.StringVar(&DSN, "dsn", "", "Set Database Connection String")
 	flag.StringVar(&PProfAddr, "pprof_addr", "127.0.0.1:9218", "Set the port and address pprof server use")
 	flag.Parse()
+	log.SetLevel(log.DebugLevel)
 	db, err := sqlx.Open("mysql", DSN)
 	if err != nil {
 		panic(err)
@@ -58,6 +60,7 @@ func main() {
 		m := update.Message
 		cq := update.CallbackQuery
 		if m != nil {
+			command.ExecPipeline(bot, m, "pre")
 			log.Infof("Message Recieved: %s********", tdstr.Atmost4Char([]rune(m.Text)))
 			if fn, err := command.Lookup(m.Command()); err == nil && fn != nil {
 				go fn(bot, m)
@@ -71,7 +74,8 @@ func main() {
 				go command.Del(bot, m)
 				continue
 			}
-			command.Moyu(bot, m)
+			command.ExecPipeline(bot, m, "post")
+			// nothing more
 		}
 		if cq != nil {
 			// TODO: change stub callback query
@@ -92,8 +96,9 @@ func commandInit() {
 	command.Register(command.List, "list")
 	command.Register(command.Done, "done")
 	command.Register(command.Workon, "workon")
-	command.Register(command.Moyu, "moyu_plugin")
 	command.Register(command.TODONow, "todonow")
 
 	command.CQRegister(CQ.Workon, "workon")
+	command.PipelinePush(pipe.User, "pre")
+	command.PipelinePush(pipe.Moyu, "post")
 }

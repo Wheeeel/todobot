@@ -1,0 +1,76 @@
+package task
+
+import (
+	"github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+)
+
+type User struct {
+	UUID     string         `db:"uuid"`
+	ID       int            `db:"id"`
+	UserName string         `db:"user_name"`
+	DispName string         `db:"disp_name"`
+	CreateAt mysql.NullTime `db:"create_at"`
+	UpdateAt mysql.NullTime `db:"update_at"`
+	Exist    bool           // if Exist = false, the object is treated as nil
+}
+
+func SelectUser(db *sqlx.DB, id int) (u User, err error) {
+	sqlStr := "SELECT * FROM users WHERE id = ?"
+	rows, er := db.Queryx(sqlStr, id)
+	if er != nil {
+		err = errors.Wrap(er, "SelectUser")
+		return
+	}
+	if !rows.Next() {
+		u.Exist = false
+		return
+	}
+	err = db.QueryRowx(sqlStr, id).StructScan(&u)
+	if err != nil {
+		err = errors.Wrap(err, "SelectUser")
+		return
+	}
+	return
+}
+
+func UpdateUser(db *sqlx.DB, u User) (err error) {
+	sqlStr := "UPDATE users SET user_name = ?, disp_name = ? WHERE id = ?"
+	_, err = db.Exec(sqlStr, u.UserName, u.DispName, u.ID)
+	if err != nil {
+		err = errors.Wrap(err, "UpdateUser")
+	}
+	return
+}
+
+func CreateUser(db *sqlx.DB, u User) (err error) {
+	sqlStr := "INSERT INTO users (uuid, id, user_name, disp_name)VALUES(?, ?, ?, ?)"
+	_, err = db.Exec(sqlStr, u.UUID, u.ID, u.UserName, u.DispName)
+	if err != nil {
+		err = errors.Wrap(err, "CreateUser")
+		return
+	}
+	return
+}
+
+func ListUser(db *sqlx.DB, page int) (ul []User, err error) {
+	sqlStr := "SELECT * FROM user ORDER BY create_at DESC LIMIT 20 OFFSET ?"
+	rows, er := db.Queryx(sqlStr, (page-1)*20)
+	if er != nil {
+		err = errors.Wrap(er, "ListUser")
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		u := User{}
+		err = rows.StructScan(&u)
+		if err != nil {
+			err = errors.Wrap(err, "ListUser")
+			return
+		}
+		u.Exist = true
+		ul = append(ul, u)
+	}
+	return
+}
