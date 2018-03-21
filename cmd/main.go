@@ -57,34 +57,36 @@ func main() {
 	commandInit()
 
 	for update := range updates {
-		m := update.Message
-		cq := update.CallbackQuery
-		if m != nil {
-			command.ExecPipeline(bot, m, "pre")
-			log.Infof("Message Recieved: %s********", tdstr.Atmost4Char([]rune(m.Text)))
-			if fn, err := command.Lookup(m.Command()); err == nil && fn != nil {
-				go fn(bot, m)
-				continue
+		go func() {
+			m := update.Message
+			cq := update.CallbackQuery
+			if m != nil {
+				command.ExecPipeline(bot, m, "pre")
+				log.Infof("Message Recieved: %s********", tdstr.Atmost4Char([]rune(m.Text)))
+				if fn, err := command.Lookup(m.Command()); err == nil && fn != nil {
+					go fn(bot, m)
+					return
+				}
+				if strings.Contains(m.Command(), "donex") {
+					go command.Done(bot, m)
+					return
+				}
+				if strings.Contains(m.Command(), "del") {
+					go command.Del(bot, m)
+					return
+				}
+				command.ExecPipeline(bot, m, "post")
+				// nothing more
 			}
-			if strings.Contains(m.Command(), "donex") {
-				go command.Done(bot, m)
-				continue
+			if cq != nil {
+				// TODO: change stub callback query
+				log.Infof("CallbackQuery, data: %v", []byte(cq.Data))
+				fn, err := command.CQLookup(cq)
+				if err == nil && fn != nil {
+					go fn(bot, cq)
+				}
 			}
-			if strings.Contains(m.Command(), "del") {
-				go command.Del(bot, m)
-				continue
-			}
-			command.ExecPipeline(bot, m, "post")
-			// nothing more
-		}
-		if cq != nil {
-			// TODO: change stub callback query
-			log.Infof("CallbackQuery, data: %v", []byte(cq.Data))
-			fn, err := command.CQLookup(cq)
-			if err == nil && fn != nil {
-				go fn(bot, cq)
-			}
-		}
+		}()
 	}
 }
 
