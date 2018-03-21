@@ -58,7 +58,7 @@ func CreateUser(db *sqlx.DB, u User) (err error) {
 }
 
 func ListUser(db *sqlx.DB, page int) (ul []User, err error) {
-	sqlStr := "SELECT * FROM user ORDER BY create_at DESC LIMIT 20 OFFSET ?"
+	sqlStr := "SELECT * FROM users ORDER BY create_at DESC LIMIT 20 OFFSET ?"
 	rows, er := db.Queryx(sqlStr, (page-1)*20)
 	if er != nil {
 		err = errors.Wrap(er, "ListUser")

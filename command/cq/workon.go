@@ -124,7 +124,6 @@ l1:
 	ati := new(task.ActiveTaskInstance)
 	ati.StartAt = mysql.NullTime{Time: time.Now(), Valid: true}
 	ati.UserID = userID
-	ati.WanderProtect = 1
 	ati.InstanceState = task.ATI_STATE_WORKING
 	ati.InstanceUUID = UUID.String()
 	ati.NotifyID = chatID

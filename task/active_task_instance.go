@@ -23,8 +23,9 @@ type ActiveTaskInstance struct {
 	InstanceState      int            `db:"instance_state"`
 	ReminderState      int            `db:"reminder_state"`
 	ReminderExpression string         `db:"reminder_expression"`
-	WanderProtect      int            `db:"wander_protect"`
+	WanderTimes        int            `db:"wander_times"`
 	NotifyID           int64          `db:"notify_to_id"`
+	Cooldown           int            `db:"cooldown"`
 	StartAt            mysql.NullTime `db:"start_at"`
 	EndAt              mysql.NullTime `db:"end_at"`
 }
@@ -104,15 +105,25 @@ func InsertATI(db *sqlx.DB, ati ActiveTaskInstance) (err error) {
 	sqlx := `INSERT INTO active_task_instance (instance_uuid, task_id,
 	instance_state, reminder_state, 
 	reminder_expression, user_id, 
-	notify_to_id, start_at, end_at, wander_protect)
-	VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	notify_to_id, start_at, end_at)
+	VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	_, err = db.Exec(sqlx, ati.InstanceUUID,
 		ati.TaskID, ati.InstanceState,
 		ati.ReminderState, ati.ReminderExpression, ati.UserID, ati.NotifyID,
-		ati.StartAt, ati.EndAt, ati.WanderProtect)
+		ati.StartAt, ati.EndAt)
 
 	if err != nil {
 		return errors.Wrap(err, "InsertATI")
+	}
+	return
+}
+
+func IncWanderTimes(db *sqlx.DB, uuid string) (err error) {
+	sqlx := "UPDATE active_task_instance SET wander_times = wander_times + 1 WHERE instance_uuid = ?"
+	_, err = db.Exec(sqlx, uuid)
+	if err != nil {
+		err = errors.Wrap(err, "IncWanderTimes")
+		return
 	}
 	return
 }

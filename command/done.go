@@ -115,6 +115,7 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 		return
 	}
 	msg.Text = fmt.Sprintf("%s done task *%s*", user, t.Content)
+	// It's an active task instance
 	if len(atil) > 0 {
 		log.Infof("%+v", atil[0])
 		// finish the task here
@@ -124,7 +125,11 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 			bot.Send(msg)
 			return
 		}
-		msg.Text = msg.Text + "\n" + fmt.Sprintf("恭喜完成任务啦～ 本次任务用时 %s ", time.Since(atil[0].StartAt.Time))
+		ati := atil[0]
+		msg.Text = msg.Text + "\n" + fmt.Sprintf("恭喜完成任务啦～ 本次任务用时 %s (本次摸鱼次数已经通过私聊发送)", time.Since(atil[0].StartAt.Time))
+		privM := tg.NewMessage(int64(req.From.ID),
+			fmt.Sprintf("任务: %s\n摸鱼 %d 次\n摸鱼时间预计为: %s\n实际工作时间为: %s\n请继续努力哦", t.Content, ati.WanderTimes, time.Duration(ati.WanderTimes*30)*time.Second, time.Since(ati.StartAt.Time)-time.Duration(ati.WanderTimes*30)*time.Second))
+		bot.Send(privM)
 	}
 	bot.Send(msg)
 	return

@@ -35,6 +35,7 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	userID := req.From.ID
 	chatID := req.Chat.ID
 	ret = true
+	silientMode := false
 
 	atil, err := task.SelectATIByUserIDAndState(task.DB, userID, task.ATI_STATE_WORKING)
 	if err != nil {
@@ -55,7 +56,7 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 
 	if er == nil {
 		log.Info("Friendly Message not timed out", val)
-		return
+		silientMode = true
 	}
 
 	ts, err := task.TaskByID(task.DB, ati.TaskID)
@@ -77,9 +78,16 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	if ati.NotifyID == chatID {
 		txtMsg = fmt.Sprintf("%s\n正在进行的任务: %s", fm, ts)
 	}
+	err = task.IncWanderTimes(task.DB, ati.InstanceUUID)
+	if err != nil {
+		err = errors.Wrap(err, "Moyu")
+		return
+	}
 	m := tg.NewMessage(chatID, txtMsg)
 	m.ReplyToMessageID = req.MessageID
-	bot.Send(m)
-	cache.SetKeyWithTimeout(ati.InstanceUUID, "OwO", 30*time.Second)
+	if !silientMode {
+		bot.Send(m)
+		cache.SetKeyWithTimeout(ati.InstanceUUID, fmt.Sprintf("%d", ati.Cooldown), time.Duration(ati.Cooldown)*time.Second)
+	}
 	return
 }
