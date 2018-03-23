@@ -28,6 +28,7 @@ type ActiveTaskInstance struct {
 	Cooldown           int            `db:"cooldown"`
 	StartAt            mysql.NullTime `db:"start_at"`
 	EndAt              mysql.NullTime `db:"end_at"`
+	PhraseGroupUUID    string         `db:"phrase_group_uuid"`
 }
 
 func SelectATIByUUID(db *sqlx.DB, UUID string) (atil []ActiveTaskInstance, err error) {
@@ -105,12 +106,12 @@ func InsertATI(db *sqlx.DB, ati ActiveTaskInstance) (err error) {
 	sqlx := `INSERT INTO active_task_instance (instance_uuid, task_id,
 	instance_state, reminder_state, 
 	reminder_expression, user_id, 
-	notify_to_id, start_at, end_at)
-	VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	notify_to_id, start_at, end_at, phrase_group_uuid)
+	VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	_, err = db.Exec(sqlx, ati.InstanceUUID,
 		ati.TaskID, ati.InstanceState,
 		ati.ReminderState, ati.ReminderExpression, ati.UserID, ati.NotifyID,
-		ati.StartAt, ati.EndAt)
+		ati.StartAt, ati.EndAt, ati.PhraseGroupUUID)
 
 	if err != nil {
 		return errors.Wrap(err, "InsertATI")

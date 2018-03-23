@@ -17,6 +17,7 @@ type Task struct {
 	TaskID    int    `db:"task_id"`
 	Content   string `json:"content" db:"content"`
 	EnrollCnt int    `json:"enroll_cnt" db:"enroll_cnt"`
+	CreateBy  int    `db:"create_by"`
 }
 
 func (t Task) String() string {
@@ -24,8 +25,8 @@ func (t Task) String() string {
 }
 
 func TaskByID(db *sqlx.DB, taskID int) (t Task, err error) {
-	sqlStr := "SELECT id, task_id, content, enroll_cnt  FROM tasks WHERE id = ?"
-	err = db.QueryRowx(sqlStr, taskID).Scan(&t.ID, &t.TaskID, &t.Content, &t.EnrollCnt)
+	sqlStr := "SELECT id, task_id, content, enroll_cnt, create_by  FROM tasks WHERE id = ?"
+	err = db.QueryRowx(sqlStr, taskID).Scan(&t.ID, &t.TaskID, &t.Content, &t.EnrollCnt, &t.CreateBy)
 	if err != nil {
 		err = errors.Wrap(err, "tasks by ID error")
 		return
@@ -95,8 +96,8 @@ func DelTask(db *sqlx.DB, taskID int) (err error) {
 	return
 }
 
-func AddTask(db *sqlx.DB, task string, enrollCnt int, chatID int64) (tID int, err error) {
-	sqlStr := "INSERT INTO tasks (task_id, content, enroll_cnt, chat_id)VALUES(?, ?, ?, ?)"
+func AddTask(db *sqlx.DB, task string, enrollCnt int, chatID int64, createBy int) (tID int, err error) {
+	sqlStr := "INSERT INTO tasks (task_id, content, enroll_cnt, chat_id, create_by)VALUES(?, ?, ?, ?, ?)"
 	tot, err := TaskCountByChat(db, chatID)
 	if err != nil {
 		err = errors.Wrap(err, "add task error")
@@ -104,7 +105,7 @@ func AddTask(db *sqlx.DB, task string, enrollCnt int, chatID int64) (tID int, er
 	}
 	tID = tot + 1
 	mu.Lock()
-	_, err = db.Queryx(sqlStr, tID, task, enrollCnt, chatID)
+	_, err = db.Queryx(sqlStr, tID, task, enrollCnt, chatID, createBy)
 	mu.Unlock()
 	if err != nil {
 		err = errors.Wrap(err, "add task error")

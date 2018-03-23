@@ -39,6 +39,16 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 		return
 	}
 
+	phraseGroupUUID := ""
+	u, err := task.SelectUser(task.DB, req.From.ID)
+	if err == nil {
+		// skip the unecessary error
+		phraseGroupUUID = u.PhraseUUID
+	} else {
+		err = errors.Wrap(err, "Workon")
+		log.Error(err)
+	}
+
 	// sanity check
 	atil, err := task.SelectATIByUserIDAndStateForUpdate(task.DB, userID, task.ATI_STATE_WORKING)
 	if err != nil {
@@ -96,6 +106,7 @@ l1:
 	ati.InstanceState = task.ATI_STATE_WORKING
 	ati.InstanceUUID = UUID.String()
 	ati.NotifyID = chatID
+	ati.PhraseGroupUUID = phraseGroupUUID
 	ati.TaskID = taskRealID
 	err = task.InsertATI(task.DB, *ati)
 	if err != nil {

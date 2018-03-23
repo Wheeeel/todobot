@@ -38,7 +38,7 @@ func TODO(bot *tg.BotAPI, req *tg.Message) {
 		if len(tmp) == 1 {
 			enrollCnt = 1
 		}
-		tid, err := task.AddTask(task.DB, taskStr, enrollCnt, req.Chat.ID)
+		tid, err := task.AddTask(task.DB, taskStr, enrollCnt, req.Chat.ID, req.From.ID)
 		if err != nil {
 			err = errors.Wrap(err, "cmd todo error")
 			log.Error(err)

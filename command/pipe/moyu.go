@@ -70,8 +70,20 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 		log.Errorf("%s [skip the command]", err)
 		return
 	}
+	// generate user defined friendly message
 	rand.Seed(time.Now().UnixNano())
 	fm := friendlyMessage[rand.Intn(len(friendlyMessage))]
+	if ati.PhraseGroupUUID != "" {
+		tl, err := task.SelectPhrasesByGroupUUID(task.DB, ati.PhraseGroupUUID)
+		if err == nil {
+			t := tl[rand.Intn(len(tl))]
+			fm = t.Phrase
+		}
+		if err != nil {
+			err = errors.Wrap(err, "Moyu")
+			log.Error(err)
+		}
+	}
 	// TODO: Think how to make the message reply content reasonable
 	for _, keyword := range restKeyword {
 		if strings.Contains(ts.Content, keyword) {
@@ -81,7 +93,7 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	}
 	txtMsg := fmt.Sprintf("%s\n正在进行的任务ID: [%d]", fm, ts.TaskID)
 	if ati.NotifyID == chatID {
-		txtMsg = fmt.Sprintf("%s\n正在进行的任务: %s", fm, ts)
+		txtMsg = fmt.Sprintf("%s\n正在进行的任务: %s /donex%d", fm, ts, ts.TaskID)
 	}
 	err = task.IncWanderTimes(task.DB, ati.InstanceUUID)
 	if err != nil {

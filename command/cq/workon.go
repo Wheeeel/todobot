@@ -59,12 +59,38 @@ func Workon(bot *tg.BotAPI, cq *tg.CallbackQuery) {
 		return
 	}
 
+	// get User
+	phraseGroupUUID := ""
+	u, err := task.SelectUser(task.DB, cq.From.ID)
+	if err == nil {
+		// skip the unecessary error
+		phraseGroupUUID = u.PhraseUUID
+	} else {
+		err = errors.Wrap(err, "Workon")
+		log.Error(err)
+	}
+
 	taskRealID, err := task.TaskRealID(task.DB, taskID, chatID)
 	log.Infof("[DEBUG] taskRealID = %v", taskRealID)
 	if err != nil {
 		err = errors.Wrap(err, "WorkON")
 		log.Error(err)
 		cqc.Text = "唔, 这个 task 可能已经被删除了呢"
+		bot.AnswerCallbackQuery(cqc)
+		return
+	}
+	// check if the user is the creator
+	t, err := task.TaskByID(task.DB, taskRealID)
+	if err != nil {
+		err = errors.Wrap(err, "WorkON")
+		log.Error(err)
+		cqc.Text = "唔, 这个 task 可能已经被删除了呢"
+		bot.AnswerCallbackQuery(cqc)
+		return
+	}
+	if t.CreateBy != cq.From.ID {
+		cqc.Text = "唔,为了防止误触,本按钮只有创建 task 的人能点哦,想要 workon 该任务的话请使用 /workon <TaskID>"
+		cqc.ShowAlert = true
 		bot.AnswerCallbackQuery(cqc)
 		return
 	}
@@ -128,6 +154,7 @@ l1:
 	ati.InstanceUUID = UUID.String()
 	ati.NotifyID = chatID
 	ati.TaskID = taskRealID
+	ati.PhraseGroupUUID = phraseGroupUUID
 	err = task.InsertATI(task.DB, *ati)
 	if err != nil {
 		err = errors.Wrap(err, "WorkON")
