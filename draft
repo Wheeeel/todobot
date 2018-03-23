@@ -1,0 +1,23 @@
+The table needed to store the active task / state
+
+0. instance_uuid // UUID of the active task instance
+1. task_id    // unique ID to the task
+2. instance_state // working, finished, inactive, immutable [NOT NULL]
+3. reminder_state // If it's on, the crond will check and remind, if it's off, the remind will stop(at least today)
+4. reminder_expression // crond expression, reminder will generate every time it meet the current crond
+5. user_id // unique ID to the user, if they want to use reminder function, they need to have username
+6. notify_to_id // Where should the reminder message send to, if it's -1 then send to all chat has the member(don't use -1 for now)
+7. start_at // the time user start to work on the task
+8. end_at // the time user finished the task
+9. wander_protect // 摸鱼保护, 开关开启时，如果在 work 的时候摸鱼，则会提醒不要摸鱼
+
+
+Callback query data protocol
+
+Structure:
+  [command_name]\xff[args]\xff[extension]
+
+
+The table used to store User info
+
+

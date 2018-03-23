@@ -102,6 +102,8 @@ func commandInit() {
 	command.Register(command.Users, "users")
 	command.Register(command.Cancel, "cancel")
 	command.Register(command.Track, "track")
+	command.Register(command.Help, "help")
+	command.Register(command.Help, "start")
 
 	command.CQRegister(CQ.Workon, "workon")
 	command.PipelinePush(pipe.User, "pre")
