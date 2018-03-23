@@ -139,6 +139,7 @@ l1:
 	cqc.Text = "好的～ 请努力完成任务哦 =w="
 	cqc.ShowAlert = true
 	_, err = bot.AnswerCallbackQuery(cqc)
+	// TODO: Let's add a hint to the message
 	if err != nil {
 		err = errors.Wrap(err, "Workon")
 	}

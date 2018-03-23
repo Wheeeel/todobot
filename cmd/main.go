@@ -100,6 +100,8 @@ func commandInit() {
 	command.Register(command.Workon, "workon")
 	command.Register(command.TODONow, "todonow")
 	command.Register(command.Users, "users")
+	command.Register(command.Cancel, "cancel")
+	command.Register(command.Track, "track")
 
 	command.CQRegister(CQ.Workon, "workon")
 	command.PipelinePush(pipe.User, "pre")
