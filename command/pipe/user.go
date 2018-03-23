@@ -47,6 +47,10 @@ func getUser(u *tg.User) (uobj task.User, err error) {
 			return
 		}
 	}
+	// If user required do not track me, then clear the info
+	if uobj.DontTrack == "yes" {
+		return
+	}
 	if uobj.DispName != dispName || uobj.UserName != u.UserName {
 		uobj.DispName = dispName
 		uobj.UserName = u.UserName

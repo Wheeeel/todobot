@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -29,6 +30,8 @@ var friendlyRestMessage = []string{
 	"辛苦啦~ 请好好休息的说~~",
 }
 
+var mu sync.RWMutex
+
 var restKeyword = []string{"休息", "睡觉", "摸鱼", "sleep", "玩"}
 
 func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
@@ -48,7 +51,9 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	}
 	ati := atil[0]
 	// If the timeout passed
+	mu.RLock()
 	val, er := cache.Get(ati.InstanceUUID)
+	mu.RUnlock()
 	if er != nil && er != redis.Nil {
 		err = errors.Wrap(er, "Moyu")
 		log.Error(err)
@@ -87,7 +92,9 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	m.ReplyToMessageID = req.MessageID
 	if !silientMode {
 		bot.Send(m)
+		mu.Lock()
 		cache.SetKeyWithTimeout(ati.InstanceUUID, fmt.Sprintf("%d", ati.Cooldown), time.Duration(ati.Cooldown)*time.Second)
+		mu.Unlock()
 	}
 	return
 }

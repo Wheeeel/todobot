@@ -7,13 +7,14 @@ import (
 )
 
 type User struct {
-	UUID     string         `db:"uuid"`
-	ID       int            `db:"id"`
-	UserName string         `db:"user_name"`
-	DispName string         `db:"disp_name"`
-	CreateAt mysql.NullTime `db:"create_at"`
-	UpdateAt mysql.NullTime `db:"update_at"`
-	Exist    bool           // if Exist = false, the object is treated as nil
+	UUID      string         `db:"uuid"`
+	ID        int            `db:"id"`
+	UserName  string         `db:"user_name"`
+	DispName  string         `db:"disp_name"`
+	CreateAt  mysql.NullTime `db:"create_at"`
+	UpdateAt  mysql.NullTime `db:"update_at"`
+	Exist     bool           `db:"exist"` // if Exist = false, the object is treated as nil
+	DontTrack string         `db:"dont_track"`
 }
 
 func SelectUser(db *sqlx.DB, id int) (u User, err error) {
@@ -39,8 +40,8 @@ func SelectUser(db *sqlx.DB, id int) (u User, err error) {
 }
 
 func UpdateUser(db *sqlx.DB, u User) (err error) {
-	sqlStr := "UPDATE users SET user_name = ?, disp_name = ? WHERE id = ?"
-	_, err = db.Exec(sqlStr, u.UserName, u.DispName, u.ID)
+	sqlStr := "UPDATE users SET user_name = ?, disp_name = ?, dont_track = ? WHERE id = ?"
+	_, err = db.Exec(sqlStr, u.UserName, u.DispName, u.DontTrack, u.ID)
 	if err != nil {
 		err = errors.Wrap(err, "UpdateUser")
 	}
