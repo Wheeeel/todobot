@@ -35,6 +35,25 @@ func SelectATIByUUID(db *sqlx.DB, UUID string) (atil []ActiveTaskInstance, err e
 	return
 }
 
+func SelectATIByTaskIDAndState(db *sqlx.DB, tid int, state int) (atil []ActiveTaskInstance, err error) {
+	sqlStr := "SELECT * FROM active_task_instance WHERE task_id = ? AND instance_state = ?"
+	rows, er := db.Queryx(sqlStr, tid, state)
+	if er != nil {
+		err = errors.Wrap(er, "SelectATIByTaskIDAndState")
+		return
+	}
+	for rows.Next() {
+		ati := ActiveTaskInstance{}
+		err = rows.StructScan(&ati)
+		if err != nil {
+			err = errors.Wrap(err, "SelectATIByTaskIDAndState")
+			return
+		}
+		atil = append(atil, ati)
+	}
+	return
+}
+
 func SelectATIByUserIDAndState(db *sqlx.DB, uid int, state int) (atil []ActiveTaskInstance, err error) {
 	sqlx := "SELECT * FROM active_task_instance WHERE user_id = ? AND instance_state = ?"
 	rows, er := db.Queryx(sqlx, uid, state)

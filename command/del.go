@@ -43,7 +43,34 @@ func Del(bot *tg.BotAPI, req *tg.Message) {
 	tlen := len(delList)
 	count := 0
 	for _, id := range delList {
-		err := task.DelTask(task.DB, id)
+		t, err := task.TaskByID(task.DB, id)
+		if err != nil {
+			err = errors.Wrap(err, "Del")
+			log.Error(err)
+			msg.Text = "唔,出错了哦, 再次重试依旧不行请 pia @V0ID001 QwQ"
+			bot.Send(msg)
+			return
+		}
+		if t.CreateBy != 0 && t.CreateBy != req.From.ID {
+			// task cannot be deleted by other user
+			msg.Text = "唔,你不能删除其他人的任务哦"
+			bot.Send(msg)
+			return
+		}
+		atil, err := task.SelectATIByTaskIDAndState(task.DB, t.ID, task.ATI_STATE_WORKING)
+		if err != nil {
+			err = errors.Wrap(err, "Del")
+			log.Error(err)
+			msg.Text = "唔,出错了哦, 再次重试依旧不行请 pia @V0ID001 QwQ"
+			bot.Send(msg)
+			return
+		}
+		if len(atil) > 0 {
+			msg.Text = "唔, 有人正在进行这个任务呢,不能删除哦"
+			bot.Send(msg)
+			return
+		}
+		err = task.DelTask(task.DB, id)
 		if err == nil {
 			err = errors.Wrap(err, "Error when removing tasks by realID")
 			log.Error(err)
