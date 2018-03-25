@@ -7,16 +7,16 @@ import (
 )
 
 type User struct {
-	UUID           string         `db:"uuid"`
-	ID             int            `db:"id"`
-	UserName       string         `db:"user_name"`
-	DispName       string         `db:"disp_name"`
-	CreateAt       mysql.NullTime `db:"create_at"`
-	UpdateAt       mysql.NullTime `db:"update_at"`
-	Exist          bool           `db:"exist"` // if Exist = false, the object is treated as nil
-	DontTrack      string         `db:"dont_track"`
-	MoyuPhraseUUID string         `db:"moyu_phrase_uuid"`
-	PhraseUUID     string         `db:"phrase_uuid"`
+	UUID           string         `db:"uuid" json:"uuid"`
+	ID             int            `db:"id" json:"id"`
+	UserName       string         `db:"user_name" json:"user_name"`
+	DispName       string         `db:"disp_name" json:"disp_name"`
+	CreateAt       mysql.NullTime `db:"create_at" json:"-"`
+	UpdateAt       mysql.NullTime `db:"update_at" json:"-"`
+	Exist          bool           `db:"exist" json:"exist"` // if Exist = false, the object is treated as nil
+	DontTrack      string         `db:"dont_track" json:"dont_track"`
+	MoyuPhraseUUID string         `db:"moyu_phrase_uuid" json:"-"`
+	PhraseUUID     string         `db:"phrase_uuid" json:"-"`
 }
 
 func SelectUser(db *sqlx.DB, id int) (u User, err error) {

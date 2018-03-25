@@ -9,6 +9,7 @@ import (
 	_ "net/http/pprof"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/Wheeeel/todobot/api"
 	"github.com/Wheeeel/todobot/command"
 	CQ "github.com/Wheeeel/todobot/command/cq"
 	"github.com/Wheeeel/todobot/command/pipe"
@@ -17,6 +18,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/cors"
 )
 
 var APIKey string
@@ -52,6 +54,12 @@ func main() {
 	updates, err := bot.GetUpdatesChan(u)
 	go func() {
 		log.Println(http.ListenAndServe(PProfAddr, nil))
+	}()
+
+	router := api.InitRouter()
+	mux := cors.Default().Handler(router)
+	go func() {
+		log.Println(http.ListenAndServe("127.0.0.1:9200", mux))
 	}()
 
 	commandInit()
@@ -104,6 +112,7 @@ func commandInit() {
 	command.Register(command.Track, "track")
 	command.Register(command.Help, "help")
 	command.Register(command.Help, "start")
+	command.Register(command.Weblogin, "weblogin")
 
 	command.CQRegister(CQ.Workon, "workon")
 	command.PipelinePush(pipe.User, "pre")
