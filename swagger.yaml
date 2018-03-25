@@ -1,0 +1,228 @@
+swagger: "2.0"
+info:
+  version: "0.1"
+  title: "TODOBot API"
+  description: "The API used to connect between TODOBot and front end" 
+  contact:
+    name: "VOID001"
+    url: "https://github.com/VOID001"
+    email: "void001@archlinuxcn.org"
+  license:
+    name: "GPLv3"
+    url: "https://www.gnu.org/licenses/gpl-3.0.en.html"
+host: "todo.void-shana.moe"
+basePath: "/api/v1"
+schemes: 
+  - "https"
+paths:
+  /tasks/my:
+    get:
+      tags:
+       - "tasks"
+      summary: "Fetch my tasks"
+      description: "Get Tasks belong to current user, order by task ID"
+      parameters: 
+       - name: "page"
+         in: "query"
+         default: 1
+         type: "integer"
+         format: "int"
+         description: "Select the page to list"
+       - name: "count"
+         in: "query"
+         type: "integer"
+         format: "int"
+         description: "Set the count that the page list out"
+         default: 20
+       - name: "type"
+         in: "query"
+         type: "string"
+         description: "Select which type of task should be displayed"
+         default: "all"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Task"
+        401:
+          description: "unauthorized operation"
+          schema:
+            type: "string"
+            description: "you are not authorized."
+  /atis/all:
+    get:
+      tags: 
+       - "active task instance"
+      summary: "Get all task instances"
+      description: "Get all task instances, can be used to do sth special"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ActiveTaskInstance"
+  /phrases:
+    get:
+      tags:
+       - "Phrases"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Phrase"
+  
+  /phrases/update:
+    post:
+      tags: 
+       - "Phrases"
+      parameters: 
+      -  in: "body"
+         name: "body"
+         required: true
+         schema:
+          type: array
+          items:
+            type: string
+            example: "Work hard plz"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: string
+            example: "success"
+
+  /login:
+    get:
+      tags:
+       - "login"
+      summary: "Login to the Web, only one of the parameter should be provided"
+      parameters: 
+       - name: "cred"
+         in: "query"
+         required: false
+         description: "If the user login via telegram (which means, send a /weblogin to TODOBot), the bot will reply with a link contains the cred parameter(expire in 1 minute)"
+         type: string
+       - name: "otp"
+         type: string
+         in: "query"
+         required: false
+         description: "If the user is logging in via the web, it should send the OTP displayed on screen to TODOBot, and TODOBot will verify him, the browser will then get information contains the users credential, and user will be logged in"
+      responses:
+        200:
+          description: "successful operation"
+          headers:
+            X-Auth-Token:
+              type: string
+              description: "Every time the caller want to request the server, caller should bring the token, or the request will be rejected"
+          schema:
+            type: "string"
+            default: "success"
+      
+  /login/otp:
+    get:
+      tags:
+       - "login"
+      description: "If the user is logging in via the web browser. Caller should first get a login one time password(e.g 6 digits number) from this API and show it to the user (The password will expire in 1 min)"
+      responses:
+        200:
+          description: "succesful operation"
+          schema:
+            type: "string"
+            example: "049127"
+        202:
+          description: "insufficient otp, need to wait for some time"
+          headers:
+            Retry-After:
+              type: integer
+              default: "10"
+              description: "ask client to retry after 10 seconds"
+
+definitions:
+  Task:
+    description: "An object represent to a task added by the user, it will have contents, status, and the finish duration (TODOBot need to combine Active Task Instance with Task together to give a response)"
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int"
+      task_id:
+        type: "integer"
+        format: "int"
+      content:
+        type: "string"
+      chat_id:
+        type: "integer"
+        format: "int64"
+      status:
+        type: "string"
+      wander_times:
+        type: "integer"
+        format: "int"
+      task_duration:
+        type: "string"
+  Phrase:
+    description: "The sentence that user created, including the information, and will ONLY see the phrase created by himself"
+    type: "object"
+    properties:
+      uuid:
+        type: string
+        example: "00ab-deab-dddd-2222"
+      phrase:
+        type: string
+        example: "不要摸鱼哦,请去工作"
+      create_at:
+        type: string
+        example: "2018-01-02T:Timestamp"
+      type:
+        type: string
+        description: "if type = wander, it means it will show when the user is working on a relax task, if type = work, it means the phrase will show when the user is working on a task"
+  Ranking:
+    description: "For each ranking object, is representented a user's stat information(like task duration, num of tasks finished, etc"
+    type: "object"
+    properties:
+      disp_name:
+        type: "string"
+      finished_count:
+        type : "integer"
+        format: "int"
+      wander_times:
+        type: "integer"
+        format: "int"
+      duration:
+        type: "string"
+  ActiveTaskInstance:
+    description: "Active Task instance is used to provide information for each task user workon / done, it will NOT contain any information about the task content"
+    type: "object"
+    properties:
+      task_id:
+        type: integer
+        format: int
+      instance_state:
+        type: string
+        description: "Instance can have 5 different states(currently): invalid, working, pausing, finished, immutable"
+      user_uuid:
+        type: string
+        description: "Information to indentify a user, we will not reveal user id to caller"
+      disp_name:
+        type: string
+        description: "User display name, if hidden, it will be shown as HIDDEN BY USER"
+      start_at:
+        type: string
+        description: "When the task is started"
+      end_at:
+        type: string
+        description: "When the task ended (for unfinished/working/invalid tasks, the time will be empty)"
+      wander_times:
+        type: integer
+        description: "How many times does the user got distraction"
+      
+
+         
+       
+  
+    
+
+
