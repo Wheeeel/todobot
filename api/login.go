@@ -9,7 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/Wheeeel/todobot/cache"
 	tdstr "github.com/Wheeeel/todobot/string"
-	"github.com/Wheeeel/todobot/task"
+	"github.com/Wheeeel/todobot/model"
 	"github.com/go-redis/redis"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -56,7 +56,7 @@ func GetMe(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 // redis.Nil means token invalid
-func GetUserFromToken(r *http.Request) (u task.User, err error) {
+func GetUserFromToken(r *http.Request) (u model.User, err error) {
 	authToken := r.Header.Get(XAuthHeader)
 	userIDStr, er := cache.Get(fmt.Sprintf("auth.%s", authToken))
 	if er == redis.Nil {
@@ -68,7 +68,7 @@ func GetUserFromToken(r *http.Request) (u task.User, err error) {
 		err = errors.Wrap(er, "GetUserFromToken")
 		return
 	}
-	u, err = task.SelectUser(task.DB, userID)
+	u, err = model.SelectUser(model.DB, userID)
 	if err != nil {
 		err = errors.Wrap(err, "GetUserFromToken")
 		return
@@ -146,7 +146,7 @@ func GetLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		}
 		w.Header().Add("X-Auth-Token", authToken)
 		resp.Code = http.StatusOK
-		u, err := task.SelectUser(task.DB, userID)
+		u, err := model.SelectUser(model.DB, userID)
 		resp.Data = u
 		err = resp.Send(w)
 		if err != nil {

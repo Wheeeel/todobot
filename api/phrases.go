@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/Wheeeel/todobot/task"
+	"github.com/Wheeeel/todobot/model"
 	"github.com/go-redis/redis"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
@@ -37,7 +37,7 @@ func GetPhrases(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 	if u.PhraseUUID != "" {
-		pl, err := task.SelectPhrasesByGroupUUID(task.DB, u.PhraseUUID)
+		pl, err := model.SelectPhrasesByGroupUUID(model.DB, u.PhraseUUID)
 		if err != nil {
 			err = errors.Wrap(err, "GetPhrases")
 			log.Error(err)
@@ -56,7 +56,7 @@ func GetPhrases(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		}
 		return
 	} else {
-		resp.Data = []task.Phrase{}
+		resp.Data = []model.Phrase{}
 		resp.Code = http.StatusOK
 		err = resp.Send(w)
 		if err != nil {
@@ -71,7 +71,7 @@ func GetPhrases(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func CreatePhrase(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	u, err := GetUserFromToken(r)
 	resp := Response{}
-	p := task.Phrase{}
+	p := model.Phrase{}
 	buf := new(bytes.Buffer)
 	if err == redis.Nil {
 		resp.Code = http.StatusUnauthorized
@@ -80,7 +80,7 @@ func CreatePhrase(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	}
 	if u.PhraseUUID == "" {
 		u.PhraseUUID = uuid.NewV4().String()
-		err = task.UpdateUser(task.DB, u)
+		err = model.UpdateUser(model.DB, u)
 		if err != nil {
 			err = errors.Wrap(err, "CreatePhrase")
 			log.Error(err)
@@ -135,7 +135,7 @@ func CreatePhrase(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	p.GroupUUID = u.PhraseUUID
 	p.UUID = uuid.NewV4().String()
 	p.CreateBy = u.ID
-	err = task.InsertPhrase(task.DB, p)
+	err = model.InsertPhrase(model.DB, p)
 	if err != nil {
 		err = errors.Wrap(err, "CreatePhrase")
 		log.Error(err)
@@ -159,7 +159,7 @@ func DeletePhrase(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		resp.Message = "you are not logined, please login first"
 		resp.Send(w)
 	}
-	p, err := task.SelectPhraseByUUID(task.DB, uuid)
+	p, err := model.SelectPhraseByUUID(model.DB, uuid)
 	if err != nil {
 		err = errors.Wrap(err, "DeletePhrase")
 		resp.Code = http.StatusInternalServerError
@@ -173,7 +173,7 @@ func DeletePhrase(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		resp.Send(w)
 		return
 	}
-	err = task.DeletePhraseByUUID(task.DB, p.UUID)
+	err = model.DeletePhraseByUUID(model.DB, p.UUID)
 	if err != nil {
 		err = errors.Wrap(err, "DeletPhrase")
 		resp.Code = http.StatusInternalServerError

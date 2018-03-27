@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/Wheeeel/todobot/task"
+	"github.com/Wheeeel/todobot/model"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
 )
@@ -55,8 +55,8 @@ func Users(bot *tg.BotAPI, req *tg.Message) {
 	return
 }
 
-func listUser(page int) (ul []task.User, err error) {
-	ul, err = task.ListUser(task.DB, page)
+func listUser(page int) (ul []model.User, err error) {
+	ul, err = model.ListUser(model.DB, page)
 	if err != nil {
 		err = errors.Wrap(err, "listUser")
 		return

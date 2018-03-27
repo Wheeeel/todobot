@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/Wheeeel/todobot/task"
+	"github.com/Wheeeel/todobot/model"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
 )
@@ -38,7 +38,7 @@ func TODO(bot *tg.BotAPI, req *tg.Message) {
 		if len(tmp) == 1 {
 			enrollCnt = 1
 		}
-		tid, err := task.AddTask(task.DB, taskStr, enrollCnt, req.Chat.ID, req.From.ID)
+		tid, err := model.AddTask(model.DB, taskStr, enrollCnt, req.Chat.ID, req.From.ID)
 		if err != nil {
 			err = errors.Wrap(err, "cmd todo error")
 			log.Error(err)

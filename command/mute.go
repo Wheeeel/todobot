@@ -8,7 +8,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Wheeeel/todobot/cache"
-	"github.com/Wheeeel/todobot/task"
+	"github.com/Wheeeel/todobot/model"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
 )
@@ -22,7 +22,7 @@ func Cooldown(bot *tg.BotAPI, req *tg.Message) {
 	msg := tg.NewMessage(req.Chat.ID, "")
 	msg.ReplyToMessageID = req.MessageID
 	// get the user's current workon
-	atil, err := task.SelectATIByUserIDAndState(task.DB, userID, task.ATI_STATE_WORKING)
+	atil, err := model.SelectATIByUserIDAndState(model.DB, userID, model.ATI_STATE_WORKING)
 	if err != nil {
 		err = errors.Wrap(err, "Cooldown")
 		log.Errorf("%s", err)
@@ -51,7 +51,7 @@ func Cooldown(bot *tg.BotAPI, req *tg.Message) {
 	ati.Cooldown = cooltime
 	cache.UnsetKey(ati.InstanceUUID)
 	cache.SetKeyWithTimeout(ati.InstanceUUID, ati.Cooldown, time.Duration(ati.Cooldown)*time.Second)
-	err = task.UpdateATICooldown(task.DB, ati)
+	err = model.UpdateATICooldown(model.DB, ati)
 	if err != nil {
 		err = errors.Wrap(err, "Cooldown")
 		log.Error(err)

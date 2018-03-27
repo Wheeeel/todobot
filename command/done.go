@@ -6,7 +6,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/Wheeeel/todobot/task"
+	"github.com/Wheeeel/todobot/model"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -27,7 +27,7 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 	}
 
 	log.Infof("TaskID = %d", taskID)
-	atil, err := task.SelectATIByUserIDAndChatIDAndState(task.DB, userID, chatID, task.ATI_STATE_WORKING)
+	atil, err := model.SelectATIByUserIDAndChatIDAndState(model.DB, userID, chatID, model.ATI_STATE_WORKING)
 	if err != nil {
 		msg.Text = fmt.Sprintf("Oops! %s", err)
 		bot.Send(msg)
@@ -50,7 +50,7 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 	// Change ID to Task Real ID, only when needed
 
 	if !isRealID {
-		taskID, err = task.TaskRealID(task.DB, taskID, msg.ChatID)
+		taskID, err = model.TaskRealID(model.DB, taskID, msg.ChatID)
 		if err != nil {
 			msg.Text = fmt.Sprintf("Oops! %s", err)
 			bot.Send(msg)
@@ -58,7 +58,7 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 		}
 	}
 
-	done, err := task.IsDone(task.DB, taskID, user)
+	done, err := model.IsDone(model.DB, taskID, user)
 	if err != nil {
 		msg.Text = fmt.Sprintf("Oops! %s", err)
 		bot.Send(msg)
@@ -69,26 +69,26 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 		bot.Send(msg)
 	}
 	if !done {
-		err = task.AddDone(task.DB, taskID, user)
+		err = model.AddDone(model.DB, taskID, user)
 		if err != nil {
 			msg.Text = fmt.Sprintf("Oops! %s", err)
 			bot.Send(msg)
 			return
 		}
 	}
-	t, err := task.TaskByID(task.DB, taskID)
+	t, err := model.TaskByID(model.DB, taskID)
 	if err != nil {
 		msg.Text = fmt.Sprintf("Oops! %s", err)
 		bot.Send(msg)
 		return
 	}
-	// done the task by get the task
+	// done the task by get the model
 	msg.Text = fmt.Sprintf("%s done task *%s*", user, t.Content)
 	// It's an active task instance
 	if len(atil) > 0 && atil[0].TaskID == t.ID {
 		log.Infof("%+v", atil[0])
 		// finish the task here
-		err = task.FinishATI(task.DB, atil[0].InstanceUUID)
+		err = model.FinishATI(model.DB, atil[0].InstanceUUID)
 		if err != nil {
 			msg.Text = fmt.Sprintf("Oops! %s", err)
 			bot.Send(msg)
@@ -112,7 +112,7 @@ func Done(bot *tg.BotAPI, req *tg.Message) {
 func replyDoneKeyboard(bot *tg.BotAPI, req *tg.Message, msg tg.MessageConfig) {
 	//BEGIN
 	btnMap := make([][]tg.KeyboardButton, 0)
-	tl, err := task.TasksByChat(task.DB, req.Chat.ID)
+	tl, err := model.TasksByChat(model.DB, req.Chat.ID)
 	log.Infof("%+v", tl)
 	if err != nil {
 		msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
@@ -120,14 +120,14 @@ func replyDoneKeyboard(bot *tg.BotAPI, req *tg.Message, msg tg.MessageConfig) {
 		return
 	}
 	for _, item := range tl {
-		fcnt, err := task.FinishCountByTaskID(task.DB, item.ID)
+		fcnt, err := model.FinishCountByTaskID(model.DB, item.ID)
 		if err != nil {
 			msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
 			bot.Send(msg)
 			return
 		}
 		if fcnt < item.EnrollCnt {
-			done, err := task.IsDone(task.DB, item.ID, req.From.UserName)
+			done, err := model.IsDone(model.DB, item.ID, req.From.UserName)
 			if err != nil {
 				msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
 				bot.Send(msg)

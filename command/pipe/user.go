@@ -2,7 +2,7 @@ package pipe
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/Wheeeel/todobot/task"
+	"github.com/Wheeeel/todobot/model"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -22,7 +22,7 @@ func User(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 	return
 }
 
-func getUser(u *tg.User) (uobj task.User, err error) {
+func getUser(u *tg.User) (uobj model.User, err error) {
 	// if not command, we do not track user
 	dispName := u.LastName
 	if u.FirstName != "" {
@@ -30,7 +30,7 @@ func getUser(u *tg.User) (uobj task.User, err error) {
 	}
 	log.Infof("Username: %s, DispName: %s", u.UserName, dispName)
 
-	uobj, err = task.SelectUser(task.DB, u.ID)
+	uobj, err = model.SelectUser(model.DB, u.ID)
 	if err != nil {
 		err = errors.Wrap(err, "getUser")
 		return
@@ -41,7 +41,7 @@ func getUser(u *tg.User) (uobj task.User, err error) {
 		uobj.ID = u.ID
 		uobj.DispName = dispName
 		uobj.UserName = u.UserName
-		err = task.CreateUser(task.DB, uobj)
+		err = model.CreateUser(model.DB, uobj)
 		if err != nil {
 			err = errors.Wrap(err, "getUser")
 			return
@@ -54,7 +54,7 @@ func getUser(u *tg.User) (uobj task.User, err error) {
 	if uobj.DispName != dispName || uobj.UserName != u.UserName {
 		uobj.DispName = dispName
 		uobj.UserName = u.UserName
-		err = task.UpdateUser(task.DB, uobj)
+		err = model.UpdateUser(model.DB, uobj)
 		if err != nil {
 			err = errors.Wrap(err, "getUser")
 			return

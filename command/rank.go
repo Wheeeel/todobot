@@ -9,7 +9,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/Wheeeel/todobot/task"
+	"github.com/Wheeeel/todobot/model"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
 )
@@ -43,7 +43,7 @@ func Rank(bot *tg.BotAPI, req *tg.Message) {
 	if count > 1000 {
 		count = 1000
 	}
-	rankList, err := task.Ranking(task.DB, count)
+	rankList, err := model.Ranking(model.DB, count)
 	if err != nil {
 		msg.Text = fmt.Sprintf("Oops! Server error\n %s", err)
 		log.Error(err)

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/Wheeeel/todobot/task"
+	"github.com/Wheeeel/todobot/model"
 	"github.com/go-sql-driver/mysql"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
@@ -29,7 +29,7 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 		return
 	}
 
-	taskRealID, err := task.TaskRealID(task.DB, taskID, chatID)
+	taskRealID, err := model.TaskRealID(model.DB, taskID, chatID)
 	log.Infof("[DEBUG] taskRealID = %v", taskRealID)
 	if err != nil {
 		err = errors.Wrap(err, "WorkON")
@@ -40,7 +40,7 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 	}
 
 	phraseGroupUUID := ""
-	u, err := task.SelectUser(task.DB, req.From.ID)
+	u, err := model.SelectUser(model.DB, req.From.ID)
 	if err == nil {
 		// skip the unecessary error
 		phraseGroupUUID = u.PhraseUUID
@@ -50,7 +50,7 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 	}
 
 	// sanity check
-	atil, err := task.SelectATIByUserIDAndStateForUpdate(task.DB, userID, task.ATI_STATE_WORKING)
+	atil, err := model.SelectATIByUserIDAndStateForUpdate(model.DB, userID, model.ATI_STATE_WORKING)
 	if err != nil {
 		err = errors.Wrap(err, "WorkON")
 		log.Error(err)
@@ -60,9 +60,9 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 	}
 	UUID := uuid.NewV4()
 	if len(atil) > 0 {
-		ts, err := task.TaskByID(task.DB, atil[0].TaskID)
+		ts, err := model.TaskByID(model.DB, atil[0].TaskID)
 		if err != nil {
-			ok, er := task.TaskExist(task.DB, atil[0].TaskID)
+			ok, er := model.TaskExist(model.DB, atil[0].TaskID)
 			if er != nil {
 				err = errors.Wrap(er, "WorkON")
 				log.Error(err)
@@ -81,7 +81,7 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 			// the error is the mission is removed, just stop the mission now
 			if !ok {
 				m := tg.NewMessage(chatID, "喵，这个任务已经被删掉了呢，那么这里就帮乃把此任务标记为无效了哦")
-				err = task.UpdateATIStateByUUID(task.DB, atil[0].InstanceUUID, task.ATI_STATE_INVALID)
+				err = model.UpdateATIStateByUUID(model.DB, atil[0].InstanceUUID, model.ATI_STATE_INVALID)
 				if err != nil {
 					err = errors.Wrap(err, "WorkON")
 					log.Error(err)
@@ -100,15 +100,15 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 	}
 l1:
 	// now we know that this user is not working on any task in this group, now create the task for him
-	ati := new(task.ActiveTaskInstance)
+	ati := new(model.ActiveTaskInstance)
 	ati.StartAt = mysql.NullTime{Time: time.Now(), Valid: true}
 	ati.UserID = userID
-	ati.InstanceState = task.ATI_STATE_WORKING
+	ati.InstanceState = model.ATI_STATE_WORKING
 	ati.InstanceUUID = UUID.String()
 	ati.NotifyID = chatID
 	ati.PhraseGroupUUID = phraseGroupUUID
 	ati.TaskID = taskRealID
-	err = task.InsertATI(task.DB, *ati)
+	err = model.InsertATI(model.DB, *ati)
 	if err != nil {
 		err = errors.Wrap(err, "WorkON")
 		log.Error(err)
