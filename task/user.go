@@ -42,8 +42,8 @@ func SelectUser(db *sqlx.DB, id int) (u User, err error) {
 }
 
 func UpdateUser(db *sqlx.DB, u User) (err error) {
-	sqlStr := "UPDATE users SET user_name = ?, disp_name = ?, dont_track = ? WHERE id = ?"
-	_, err = db.Exec(sqlStr, u.UserName, u.DispName, u.DontTrack, u.ID)
+	sqlStr := "UPDATE users SET user_name = ?, disp_name = ?, dont_track = ? ,phrase_uuid = ? WHERE id = ?"
+	_, err = db.Exec(sqlStr, u.UserName, u.DispName, u.DontTrack, u.PhraseUUID, u.ID)
 	if err != nil {
 		err = errors.Wrap(err, "UpdateUser")
 	}

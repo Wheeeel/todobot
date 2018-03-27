@@ -79,6 +79,16 @@ func UpdateATIStateByUUID(db *sqlx.DB, UUID string, state int) (err error) {
 	return
 }
 
+func UpdateATICooldown(db *sqlx.DB, ati ActiveTaskInstance) (err error) {
+	sqlStr := "UPDATE active_task_instance SET cooldown = ? WHERE instance_uuid = ?"
+	_, err = db.Exec(sqlStr, ati.Cooldown, ati.InstanceUUID)
+	if err != nil {
+		err = errors.Wrap(err, "UpdateATICooldown")
+		return
+	}
+	return
+}
+
 func SelectATIByUserIDAndChatIDAndState(db *sqlx.DB, uid int, cid int64, state int) (atil []ActiveTaskInstance, err error) {
 	sqlx := "SELECT * FROM active_task_instance WHERE user_id = ? AND notify_to_id = ? AND instance_state = ?"
 	rows, er := db.Queryx(sqlx, uid, cid, state)

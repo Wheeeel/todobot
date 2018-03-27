@@ -22,7 +22,7 @@ const (
 )
 
 func GetMe(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	u, err := getUserFromToken(r)
+	u, err := GetUserFromToken(r)
 	resp := Response{}
 	if err == redis.Nil {
 		resp.Code = http.StatusUnauthorized
@@ -56,7 +56,7 @@ func GetMe(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 // redis.Nil means token invalid
-func getUserFromToken(r *http.Request) (u task.User, err error) {
+func GetUserFromToken(r *http.Request) (u task.User, err error) {
 	authToken := r.Header.Get(XAuthHeader)
 	userIDStr, er := cache.Get(fmt.Sprintf("auth.%s", authToken))
 	if er == redis.Nil {
@@ -65,12 +65,12 @@ func getUserFromToken(r *http.Request) (u task.User, err error) {
 	}
 	userID, er := strconv.Atoi(userIDStr)
 	if er != nil {
-		err = errors.Wrap(er, "getUserFromToken")
+		err = errors.Wrap(er, "GetUserFromToken")
 		return
 	}
 	u, err = task.SelectUser(task.DB, userID)
 	if err != nil {
-		err = errors.Wrap(err, "getUserFromToken")
+		err = errors.Wrap(err, "GetUserFromToken")
 		return
 	}
 	return
