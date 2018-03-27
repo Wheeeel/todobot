@@ -74,7 +74,7 @@ paths:
             items:
               $ref: "#/definitions/Phrase"
   
-  /phrases/update:
+  /phrases/create:
     post:
       tags: 
        - "Phrases"
@@ -83,16 +83,34 @@ paths:
          name: "body"
          required: true
          schema:
-          type: array
-          items:
-            type: string
-            example: "Work hard plz"
+          type: string
+          example: "Work hard please"
       responses:
         200:
           description: "successful operation"
           schema:
             type: string
             example: "success"
+
+  /phrases/{uuid}/delete:
+    delete:
+      tags:
+        - "Phrases"
+      summary: "delete a certain phrase"
+      description: "delete a certain phrase"
+      parameters: 
+      - in: path
+        name: uuid
+        description: "unique identifier of the phrase"
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: string
+            example: "deleted"
 
   /login:
     get:
