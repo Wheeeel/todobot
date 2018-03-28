@@ -11,6 +11,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/Wheeeel/todobot/cache"
 	"github.com/Wheeeel/todobot/model"
+	tdstr "github.com/Wheeeel/todobot/string"
 	"github.com/go-redis/redis"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
@@ -108,18 +109,8 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 		cache.SetKeyWithTimeout(ati.InstanceUUID, fmt.Sprintf("%d", ati.Cooldown), time.Duration(ati.Cooldown)*time.Second)
 		mu.Unlock()
 		if err == nil {
-			go autoDelete(bot, &sentm, 10*time.Second)
+			go tdstr.AutoDelete(bot, &sentm, 10*time.Second)
 		}
 	}
 	return
-}
-
-func autoDelete(bot *tg.BotAPI, m *tg.Message, life time.Duration) {
-	delm := tg.NewDeleteMessage(m.Chat.ID, m.MessageID)
-	time.Sleep(life)
-	_, err := bot.Send(delm)
-	if err != nil {
-		err = errors.Wrap(err, "autoDelete")
-		log.Error(err)
-	}
 }

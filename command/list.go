@@ -3,9 +3,11 @@ package command
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Wheeeel/todobot/model"
+	tdstr "github.com/Wheeeel/todobot/string"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -81,7 +83,10 @@ func List(bot *tg.BotAPI, req *tg.Message) {
 	//replyTpl = replyTpl + "\n```"
 	msg.ParseMode = tg.ModeMarkdown
 	msg.Text = replyTpl
-	bot.Send(msg)
+	sendm, er := bot.Send(msg)
+	if er == nil {
+		go tdstr.AutoDelete(bot, &sendm, 15*time.Second)
+	}
 	log.Infof("Message Sent, RAW\n%s", replyTpl)
 	return
 }
