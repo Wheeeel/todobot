@@ -13,8 +13,8 @@ import (
 	"github.com/Wheeeel/todobot/command"
 	CQ "github.com/Wheeeel/todobot/command/cq"
 	"github.com/Wheeeel/todobot/command/pipe"
-	tdstr "github.com/Wheeeel/todobot/string"
 	"github.com/Wheeeel/todobot/model"
+	tdstr "github.com/Wheeeel/todobot/string"
 	_ "github.com/go-sql-driver/mysql"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jmoiron/sqlx"
@@ -43,22 +43,34 @@ func init() {
 }
 
 func main() {
+	tgOnline := true
 	log.Infof("TaskBot Started at %s", time.Now())
-	log.Infof("PProf Started at %s", PProfAddr)
 	bot, err := tg.NewBotAPI(APIKey)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		log.Error("Telegram API maybe down, run in Server only mode")
+		tgOnline = false
 	}
-	u := tg.NewUpdate(0)
-	u.Timeout = 60
-	updates, err := bot.GetUpdatesChan(u)
+	var updates <-chan (tg.Update)
+	if tgOnline {
+		u := tg.NewUpdate(0)
+		u.Timeout = 60
+		updates, err = bot.GetUpdatesChan(u)
+		if err != nil {
+			log.Error(err)
+		}
+	} else {
+		updates = make(chan (tg.Update))
+	}
 	go func() {
+		log.Infof("PProf Started at %s", PProfAddr)
 		log.Println(http.ListenAndServe(PProfAddr, nil))
 	}()
 
 	router := api.InitRouter()
 	mux := cors.AllowAll().Handler(router)
 	go func() {
+		log.Infof("APIServer Started at %s", "127.0.0.1:9200")
 		log.Println(http.ListenAndServe("127.0.0.1:9200", mux))
 	}()
 
@@ -114,8 +126,13 @@ func commandInit() {
 	command.Register(command.Help, "start")
 	command.Register(command.Cooldown, "cooldown")
 	command.Register(command.Weblogin, "weblogin")
+	command.Register(command.Lock, "lock")
+	command.Register(command.Unlock, "unlock")
+	command.Register(command.LiveParty, "liveparty")
+	command.Register(command.LivePartyAtAll, "lpall")
 
 	command.CQRegister(CQ.Workon, "workon")
+	command.CQRegister(CQ.LiveParty, "liveparty")
 	command.PipelinePush(pipe.User, "pre")
 	command.PipelinePush(pipe.Moyu, "post")
 }
