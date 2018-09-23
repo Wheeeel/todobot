@@ -79,7 +79,8 @@ func CreatePhrase(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 		resp.Send(w)
 	}
 	if u.PhraseUUID == "" {
-		u.PhraseUUID = uuid.NewV4().String()
+		x, _ := uuid.NewV4()
+		u.PhraseUUID = x.String()
 		err = model.UpdateUser(model.DB, u)
 		if err != nil {
 			err = errors.Wrap(err, "CreatePhrase")
@@ -133,7 +134,8 @@ func CreatePhrase(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	// we pass all the test
 	p.Show = "yes"
 	p.GroupUUID = u.PhraseUUID
-	p.UUID = uuid.NewV4().String()
+	x, _ := uuid.NewV4()
+	p.UUID = x.String()
 	p.CreateBy = u.ID
 	err = model.InsertPhrase(model.DB, p)
 	if err != nil {

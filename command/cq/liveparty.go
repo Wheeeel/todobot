@@ -28,6 +28,39 @@ func LiveParty(bot *tg.BotAPI, cq *tg.CallbackQuery) {
 	}
 	mode := global.LIVEPARTY_JOIN
 	log.Debugf("live party, argstr = %s len = %d", argStr, len(argStr))
+
+	if strings.HasPrefix(argStr, "default") {
+		if strings.HasSuffix(argStr, "quit") {
+			mode = global.LIVEPARTY_QUIT
+			cqc.Text = "默认策略设置为不参加 Live Party"
+			cqc.ShowAlert = true
+		}
+		if strings.HasSuffix(argStr, "join") {
+			mode = global.LIVEPARTY_JOIN
+			cqc.Text = "默认策略设置为参加 Live Party"
+			cqc.ShowAlert = true
+		}
+		global.Mutex.Lock()
+		// Look for the table
+		if dat, ok := global.PartyTable[userID]; !ok {
+			dat = global.PartyInfo{}
+			if cq.From.UserName != "" {
+				dat.Username = cq.From.UserName
+			}
+			dat.Default = mode
+			global.PartyTable[userID] = dat
+			log.Debugf("partyInfo debug %+v", dat)
+		} else {
+			dat := global.PartyTable[userID]
+			dat.Default = mode
+			global.PartyTable[userID] = dat
+			log.Debugf("partyInfo debug %+v", dat)
+		}
+		global.Mutex.Unlock()
+		bot.AnswerCallbackQuery(cqc)
+		return
+	}
+
 	if strings.HasPrefix(argStr, "join") {
 		mode = global.LIVEPARTY_JOIN
 		cqc.Text = "加入 LiveParty 成功"
@@ -60,6 +93,7 @@ func LiveParty(bot *tg.BotAPI, cq *tg.CallbackQuery) {
 			cqc.ShowAlert = false
 		}
 		dat.Operation = mode
+		dat.OperationTimestamp = time.Now()
 		global.PartyTable[userID] = dat
 		log.Debugf("pinfo Debug %+v", dat)
 	}

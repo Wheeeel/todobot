@@ -37,7 +37,8 @@ func getUser(u *tg.User) (uobj model.User, err error) {
 	}
 	if !uobj.Exist {
 		// create one
-		uobj.UUID = uuid.NewV4().String()
+		x, _ := uuid.NewV4()
+		uobj.UUID = x.String()
 		uobj.ID = u.ID
 		uobj.DispName = dispName
 		uobj.UserName = u.UserName

@@ -13,6 +13,10 @@ type Response struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+type WunderListAccessTokenResponse struct {
+	AccessToken string `json:"access_token"`
+}
+
 const (
 	ContentType     = "Content-Type"
 	ApplicationJSON = "application/json"

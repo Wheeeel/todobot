@@ -13,6 +13,7 @@ import (
 	"github.com/Wheeeel/todobot/command"
 	CQ "github.com/Wheeeel/todobot/command/cq"
 	"github.com/Wheeeel/todobot/command/pipe"
+	"github.com/Wheeeel/todobot/global"
 	"github.com/Wheeeel/todobot/model"
 	tdstr "github.com/Wheeeel/todobot/string"
 	_ "github.com/go-sql-driver/mysql"
@@ -75,6 +76,7 @@ func main() {
 	}()
 
 	commandInit()
+	botRestartWarning(bot, "Bot 服务重启完毕，live party 功能需要重新设置, 点击 /liveparty 查看详情", []int64{global.IMAS_GROUP_ID})
 
 	for update := range updates {
 		go func() {
@@ -130,9 +132,19 @@ func commandInit() {
 	command.Register(command.Unlock, "unlock")
 	command.Register(command.LiveParty, "liveparty")
 	command.Register(command.LivePartyAtAll, "lpall")
+	command.Register(command.LivePartyAtAll, "lpcall")
+	command.Register(command.LivePartyShowUser, "lpshow")
 
 	command.CQRegister(CQ.Workon, "workon")
 	command.CQRegister(CQ.LiveParty, "liveparty")
 	command.PipelinePush(pipe.User, "pre")
 	command.PipelinePush(pipe.Moyu, "post")
+}
+
+func botRestartWarning(bot *tg.BotAPI, broadcast string, chatID []int64) {
+	for _, cID := range chatID {
+		broadResp := tg.NewMessage(cID, broadcast)
+		bot.Send(broadResp)
+	}
+	return
 }

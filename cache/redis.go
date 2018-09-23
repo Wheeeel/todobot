@@ -29,6 +29,10 @@ func SetKeyWithTimeout(key string, value interface{}, timeout time.Duration) {
 	}
 }
 
+func SetKey(key string, value interface{}) {
+	SetKeyWithTimeout(key, value, 0)
+}
+
 func Get(key string) (val string, err error) {
 	val, err = client.Get(key).Result()
 	if err == redis.Nil {

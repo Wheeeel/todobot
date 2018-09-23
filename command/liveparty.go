@@ -31,6 +31,12 @@ func LiveParty(bot *tg.BotAPI, req *tg.Message) {
 		btn = tg.NewInlineKeyboardButtonData("QUIT", "liveparty\x01quit\x01")
 		btnrow = append(btnrow, btn)
 		btns.InlineKeyboard = append(btns.InlineKeyboard, btnrow)
+		btn = tg.NewInlineKeyboardButtonData("JOIN AS DEFAULT", "liveparty\x01default,join\x01")
+		btnrow = tg.NewInlineKeyboardRow()
+		btnrow = append(btnrow, btn)
+		btn = tg.NewInlineKeyboardButtonData("QUIT AS DEFAULT", "liveparty\x01default,quit\x01")
+		btnrow = append(btnrow, btn)
+		btns.InlineKeyboard = append(btns.InlineKeyboard, btnrow)
 		resp.ReplyMarkup = btns
 		_, err := bot.Send(resp)
 		if err != nil {
@@ -114,8 +120,25 @@ func LivePartyAtAll(bot *tg.BotAPI, req *tg.Message) {
 	}
 	atMsg := "Live Party 提醒， 今日的 Live Party 开始啦， 快来参加吧~\n"
 	for _, v := range partyUsers {
-		atMsg = atMsg + fmt.Sprintf("@%s", v)
+		atMsg = atMsg + fmt.Sprintf("@%s ", v)
 	}
 	resp.Text = atMsg
+	bot.Send(resp)
+}
+
+// LivePartyShowUser will show the party table info
+func LivePartyShowUser(bot *tg.BotAPI, req *tg.Message) {
+	stringMap := map[int]string{
+		1:  "JOIN",
+		-1: "QUIT",
+		0:  "UNSET",
+	}
+	resp := tg.NewMessage(req.Chat.ID, "")
+	resp.Text = "Live Party 人员状态\n"
+	for uID, dat := range global.PartyTable {
+		resp.Text = resp.Text + fmt.Sprintf("* Username = %s(%d), Default Policy = %s, Operation = %s, Operation Timestamp = %s\n",
+			dat.Username, uID, stringMap[dat.Default], stringMap[dat.Operation], dat.OperationTimestamp)
+	}
+	resp.ReplyToMessageID = req.MessageID
 	bot.Send(resp)
 }

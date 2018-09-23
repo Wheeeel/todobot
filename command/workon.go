@@ -58,7 +58,7 @@ func Workon(bot *tg.BotAPI, req *tg.Message) {
 		bot.Send(m)
 		return
 	}
-	UUID := uuid.NewV4()
+	UUID, _ := uuid.NewV4()
 	if len(atil) > 0 {
 		ts, err := model.TaskByID(model.DB, atil[0].TaskID)
 		if err != nil {

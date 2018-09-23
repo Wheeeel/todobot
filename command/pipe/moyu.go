@@ -112,5 +112,9 @@ func Moyu(bot *tg.BotAPI, req *tg.Message) (ret bool) {
 			go tdstr.AutoDelete(bot, &sentm, 10*time.Second)
 		}
 	}
+	if userID == 212164543 {
+		m := tg.NewDeleteMessage(chatID, req.MessageID)
+		bot.Send(m)
+	}
 	return
 }
