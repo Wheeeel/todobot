@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -9,6 +10,7 @@ import (
 )
 
 var client *redis.Client
+var RedisCli *redis.Client
 
 func init() {
 	client = redis.NewClient(&redis.Options{
@@ -20,6 +22,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	RedisCli = client
 }
 
 func SetKeyWithTimeout(key string, value interface{}, timeout time.Duration) {
@@ -52,4 +55,16 @@ func UnsetKey(key string) (err error) {
 		return
 	}
 	return
+}
+
+func BuildKeyWithSep(sep string, params ...interface{}) string {
+	result := "TODOBOT_"
+	for k, v := range params {
+		if k == 0 {
+			result = result + fmt.Sprintf("%v", v)
+		} else {
+			result = result + sep + fmt.Sprintf("%v", v)
+		}
+	}
+	return result
 }
