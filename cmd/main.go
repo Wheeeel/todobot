@@ -85,6 +85,7 @@ func main() {
 			if m != nil {
 				command.ExecPipeline(bot, m, "pre")
 				log.Infof("Message Recieved: %s********", tdstr.Atmost4Char([]rune(m.Text)))
+				log.Infof("#### Audio Full Body %+v", m.Audio)
 				if fn, err := command.Lookup(m.Command()); err == nil && fn != nil {
 					go fn(bot, m)
 					return
@@ -138,6 +139,7 @@ func commandInit() {
 	command.CQRegister(CQ.Workon, "workon")
 	command.CQRegister(CQ.LiveParty, "liveparty")
 	command.PipelinePush(pipe.User, "pre")
+	command.PipelinePush(pipe.HammerEq, "pre")
 	command.PipelinePush(pipe.Moyu, "post")
 }
 
