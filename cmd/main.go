@@ -51,6 +51,10 @@ func main() {
 		log.Error("Telegram API maybe down, run in Server only mode")
 		tgOnline = false
 	}
+	me, err := bot.GetMe()
+	if err != nil {
+		log.Error(err)
+	}
 	var updates <-chan (tg.Update)
 	if tgOnline {
 		u := tg.NewUpdate(0)
@@ -85,6 +89,18 @@ func main() {
 				command.ExecPipeline(bot, m, "pre")
 				log.Infof("Message Recieved: %s********", tdstr.Atmost4Char([]rune(m.Text)))
 				log.Infof("#### Audio Full Body %+v", m.Audio)
+				// Is the message sent to me?
+				_ = me
+				if m.IsCommand() {
+					cmdPart := strings.Split(m.Text, " ")[0]
+					if strings.Contains(cmdPart, "@") {
+						// The command is sent explicit to someone, check me
+						if strings.Split(cmdPart, "@")[1] != me.UserName {
+							return
+						}
+					}
+				}
+
 				if fn, err := command.Lookup(m.Command()); err == nil && fn != nil {
 					go fn(bot, m)
 					return
