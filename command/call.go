@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Wheeeel/todobot/cache"
+	tdstr "github.com/Wheeeel/todobot/string"
 	"github.com/go-redis/redis"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
@@ -349,7 +351,7 @@ func isFromAdmin(bot *tg.BotAPI, req *tg.Message) (ok bool, err error) {
 
 func usage(section string) string {
 	use := "Call: just as the name, CALL your friends to play game :D\n  usage: /call [join,add,leave,rm,gameadd,gamerm,setdefault,help] <arguments>" +
-		"\n  /call .<gamename> [message]: call friends in the specified game to play, you can also add a custom message to call them" +
+		"\n  /call .<gamename> [message]: [NOTICE THE DOT BEFORE GAMENAME IS REQUIRED] call friends in the specified game to play, you can also add a custom message to call them" +
 		"\n  /call invoke,play,game <gamename> [message]: call friends in the specified game to play, you can also add a custom message to call them" +
 		"\n  join/add: accept one argument [gamename], will add you to the game call list, if no argument is provided, you will be added to the default game" +
 		"\n  leave/rm: accept one argument [gamename], will remove you from the game call list, if no argument is provided, you will be removed from the default game" +
@@ -620,7 +622,10 @@ func Call(bot *tg.BotAPI, req *tg.Message) {
 			return
 		case "help":
 			msg.Text = usage("general")
-			bot.Send(msg)
+			delm, err := bot.Send(msg)
+			if err == nil {
+				go tdstr.AutoDelete(bot, &delm, time.Second*30)
+			}
 			return
 		case "start", "summon", "call", "invoke", "play", "game":
 			if len(args) > 2 {
@@ -661,7 +666,10 @@ func Call(bot *tg.BotAPI, req *tg.Message) {
 				break
 			}
 			msg.Text = usage("general")
-			bot.Send(msg)
+			delm, err := bot.Send(msg)
+			if err == nil {
+				go tdstr.AutoDelete(bot, &delm, time.Second*30)
+			}
 			return
 		}
 	}
