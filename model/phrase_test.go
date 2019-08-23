@@ -3,7 +3,7 @@ package model
 import (
 	"testing"
 
-	"github.com/blendlabs/go-util/uuid"
+    "github.com/satori/go.uuid"
 )
 
 func TestAddPhrase(t *testing.T) {
